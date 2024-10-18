@@ -5,5 +5,9 @@ Data v grafu:
 <br>
 Data v grafu ale normalizovana (min-max):
 <br>
-<br>
 ![fig2](norm.png)
+<br>
+Je divne, ze battery level se meni, ale mel by zustat konstantni
+<br>
+![fig3](bat.png)
+
