@@ -1,4 +1,4 @@
 Data v grafu:
-<img src="nonorm.pdf"/>
+![fig1](nonorm.png)
 Data v grafu ale normalizovana (min-max):
-![fig2](norm.pdf)
+![fig2](norm.png)
