@@ -13,18 +13,26 @@ from cflib.utils import uri_helper
 
 URI = uri_helper.uri_from_env(default='radio://0/80/2M/E7E7E7E7E7')
 
-DEFAULT_HEIGHT = 0.5
-BOX_LIMIT = 0.3
+DEFAULT_HEIGHT = 0.7
 title = False
 
 deck_attached_event = Event()
 
 logging.basicConfig(level=logging.ERROR)
 
-def move_circ(scf):
+def move(scf):
     with MotionCommander(scf, default_height=DEFAULT_HEIGHT) as mc:
-        while(1):
-            mc.start_circle_left(radius_m = 0.3)
+        for i in range(5):
+            mc.forward(distance_m=1, velocity=0.5)
+            time.sleep(0.05)
+            mc.turn_left(180)
+            time.sleep(0.05)
+            mc.forward(distance_m=1, velocity=0.5)
+            time.sleep(0.05)
+            mc.turn_left(180)
+            time.sleep(0.05)
+
+        mc.land()
 
 
 def log_pos_callback(timestamp, data, logconf):
@@ -79,7 +87,7 @@ if __name__ == '__main__':
             sys.exit(1)
 
         logconf.start()
-        move_circ(scf)
+        move(scf)
         logconf.stop()
 
 
