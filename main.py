@@ -1,5 +1,6 @@
 import logging
 import sys
+import os
 import time
 import numpy as np
 from threading import Event
@@ -13,25 +14,17 @@ from cflib.utils import uri_helper
 
 URI = uri_helper.uri_from_env(default='radio://0/80/2M/E7E7E7E7E7')
 
-DEFAULT_HEIGHT = 0.7
+DEFAULT_HEIGHT = 0.5
 title = False
 
 deck_attached_event = Event()
 
-logging.basicConfig(level=logging.ERROR)
+logging.basicConfig(level=logging.DEBUG)
 
 def move(scf):
     with MotionCommander(scf, default_height=DEFAULT_HEIGHT) as mc:
-        for i in range(5):
-            mc.forward(distance_m=1, velocity=0.5)
-            time.sleep(0.05)
-            mc.turn_left(180)
-            time.sleep(0.05)
-            mc.forward(distance_m=1, velocity=0.5)
-            time.sleep(0.05)
-            mc.turn_left(180)
-            time.sleep(0.05)
-
+        #mc.circle_left(radius_m = 0.5, velocity=2, angle_degrees=360.0)
+        #time.sleep(3)
         mc.land()
 
 
@@ -40,7 +33,7 @@ def log_pos_callback(timestamp, data, logconf):
     global title
     names = np.array(list(data.items()))
     names = names[:,0]
-    f = open("data.csv", "a")
+    f = open(lonconf.name, "a")
     for n in names:
         if not title:
             for name in names:
@@ -50,6 +43,32 @@ def log_pos_callback(timestamp, data, logconf):
         f.write(str(data[n]) + ',')
     f.write('\n')
     f.close()
+
+def acc_callback(timestamp, data, logconf):
+    filename = logconf.name+'.csv'
+    names = np.array(list(data.items()))
+    names = names[:,0]
+
+    if not os.path.exists(filename):
+        f = open(filename, 'w')
+        f.write('time,')
+        for n in names:
+            f.write(n+',')
+        f.write('\n')
+        f.close()
+
+    f = open(filename, 'a')
+    f.write(str(timestamp)+',')
+    for n in names:
+        f.write(str(data[n])+',')
+    f.write('\n')
+    f.close()
+    print(data)
+
+def pos_callback(timestamp, data, posconf):
+    print(data)
+    print("logconf", posconf.name)
+    print("timestamp", timestamp)
 
 
 def param_deck_flow(_, value_str):
@@ -71,25 +90,27 @@ if __name__ == '__main__':
                                          cb=param_deck_flow)
         time.sleep(1)
 
-        logconf = LogConfig(name='Position', period_in_ms=10)
-        logconf.add_variable('stateEstimate.x', 'float')
-        logconf.add_variable('stateEstimate.y', 'float')
-        logconf.add_variable('stateEstimate.z', 'float')
-
-        logconf.add_variable('pm.vbatMV', 'float')
-        logconf.add_variable('pm.batteryLevel', 'float')
+        logconf = LogConfig(name='acceleration', period_in_ms=10)
+        logconf.add_variable('acc.x', 'float')
+        logconf.add_variable('acc.y', 'float')
+        logconf.add_variable('acc.z', 'float')
 
         scf.cf.log.add_config(logconf)
-        logconf.data_received_cb.add_callback(log_pos_callback)
+        logconf.data_received_cb.add_callback(acc_callback)
+        posconf = LogConfig(name='position', period_in_ms=10)
+        posconf.add_variable('stateEstimate.x', 'float')
+        posconf.add_variable('stateEstimate.y', 'float')
+        posconf.add_variable('stateEstimate.z', 'float')
+
+        scf.cf.log.add_config(posconf)
+        posconf.data_received_cb.add_callback(acc_callback)
 
         if not deck_attached_event.wait(timeout=5):
             print('No flow deck detected!')
             sys.exit(1)
 
         logconf.start()
+        posconf.start()
         move(scf)
         logconf.stop()
-
-
-
-
+        posconf.stop()
