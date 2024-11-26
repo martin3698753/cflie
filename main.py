@@ -14,8 +14,7 @@ from cflib.utils import uri_helper
 
 URI = uri_helper.uri_from_env(default='radio://0/80/2M/E7E7E7E7E7')
 
-DEFAULT_HEIGHT = 0.5
-title = False
+DEFAULT_HEIGHT = 0.4
 
 deck_attached_event = Event()
 
@@ -23,26 +22,15 @@ logging.basicConfig(level=logging.DEBUG)
 
 def move(scf):
     with MotionCommander(scf, default_height=DEFAULT_HEIGHT) as mc:
-        #mc.circle_left(radius_m = 0.5, velocity=2, angle_degrees=360.0)
-        #time.sleep(3)
+        mc.forward(1, velocity=1)
+        mc.stop()
+        mc.up(0.3, velocity=2)
+        time.sleep(1)
+        mc.back(2, velocity=1)
+        mc.stop()
+        mc.down(0.4, velocity=2)
         mc.land()
 
-
-def log_pos_callback(timestamp, data, logconf):
-    print(data)
-    global title
-    names = np.array(list(data.items()))
-    names = names[:,0]
-    f = open(lonconf.name, "a")
-    for n in names:
-        if not title:
-            for name in names:
-                f.write(name+',')
-            f.write('\n')
-            title = True
-        f.write(str(data[n]) + ',')
-    f.write('\n')
-    f.close()
 
 def acc_callback(timestamp, data, logconf):
     filename = logconf.name+'.csv'
@@ -64,11 +52,6 @@ def acc_callback(timestamp, data, logconf):
     f.write('\n')
     f.close()
     print(data)
-
-def pos_callback(timestamp, data, posconf):
-    print(data)
-    print("logconf", posconf.name)
-    print("timestamp", timestamp)
 
 
 def param_deck_flow(_, value_str):
@@ -94,16 +77,21 @@ if __name__ == '__main__':
         logconf.add_variable('acc.x', 'float')
         logconf.add_variable('acc.y', 'float')
         logconf.add_variable('acc.z', 'float')
-
         scf.cf.log.add_config(logconf)
         logconf.data_received_cb.add_callback(acc_callback)
+
         posconf = LogConfig(name='position', period_in_ms=10)
         posconf.add_variable('stateEstimate.x', 'float')
         posconf.add_variable('stateEstimate.y', 'float')
         posconf.add_variable('stateEstimate.z', 'float')
-
         scf.cf.log.add_config(posconf)
         posconf.data_received_cb.add_callback(acc_callback)
+
+        batconf = LogConfig(name='battery', period_in_ms=10)
+        batconf.add_variable('pm.vbat', 'float')
+        batconf.add_variable('pm.batteryLevel', 'float')
+        scf.cf.log.add_config(batconf)
+        batconf.data_received_cb.add_callback(acc_callback)
 
         if not deck_attached_event.wait(timeout=5):
             print('No flow deck detected!')
@@ -111,6 +99,8 @@ if __name__ == '__main__':
 
         logconf.start()
         posconf.start()
+        batconf.start()
         move(scf)
         logconf.stop()
         posconf.stop()
+        batconf.stop()

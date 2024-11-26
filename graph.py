@@ -1,83 +1,98 @@
 import matplotlib.pyplot as plt
+import matplotlib.cm as cm
 import numpy as np
 import math
 import os
 import glob
 import pandas as pd
 
-# def sumar(ar):
-#     dist = 0
-#     s = 0
-#     for i in ar:
-#         if not math.isnan(i):
-#             s += i
-#             dist = np.append(dist, s)
-#     print("complete distance is",s)
-#     return dist
-#
-# data = genfromtxt('data.csv', delimiter=',')
+
+def pos3d(filename):
+    df = pd.read_csv(filename)
+    df = df.iloc[:, :-1]
+    colar = [df[col].values for col in df.columns]
+
+    n = colar[0][0] - np.mod(colar[0][0],10)
+    colar[0] = colar[0] - n
+
+    t = colar[0]
+    x = colar[1]
+    y = colar[2]
+    z = colar[3]
+
+    fig = plt.figure()
+    ax = fig.add_subplot(111, projection='3d')
+
+    ax.scatter(x, y, z, c=t, cmap='viridis')
+
+    ax.scatter(x[0], y[0], z[0], color='red', s=100, label='Start')
+    ax.scatter(x[-1], y[-1], z[-1], color='blue', s=100, label='End')
+
+    distances = np.sqrt(np.diff(x)**2 + np.diff(y)**2 + np.diff(z)**2)
+
+    # Calculate the total distance
+    total_distance = np.sum(distances)
+
+    # Print the total distance
+    ax.text2D(0.05, 0.95, f"Total Distance: {total_distance:.2f}", transform=ax.transAxes)
+
+    ax.legend()
+    plt.show()
+
+
+def readcsv(filename):
+    df = pd.read_csv(filename)
+    df = df.iloc[:, :-1]
+    colar = [df[col].values for col in df.columns]
+    colar = np.array(colar)
+
+    n = colar[0][0] - np.mod(colar[0][0],10)
+    colar[0] = colar[0] - n
+
+
+    if filename=='position.csv':
+        for i in range(1,3):
+            dx = np.diff(colar[i]) #delta position
+            dx = np.concatenate(([0], dx)) #Keep number of dim same
+            colar[i] = dx
+
+    if filename=='position.csv' or filename=='acceleration.csv':
+        mag = np.power(colar[1], 2) + np.power(colar[2], 2) + np.power(colar[3], 2)
+        mag = np.sqrt(mag)
+        colar = np.array([colar[0], mag])
+
+    return colar
 
 if __name__ == '__main__':
-    for filename in glob.glob('*.csv'):
-        df = pd.read_csv(filename)
-        df = df.iloc[:, :-1]
-        colar = [df[col].values for col in df.columns]
-
-        n = colar[0][0] - np.mod(colar[0][0],10)
-        colar[0] = colar[0] - n
-
-        for i in range(1,len(colar)):
-            plt.plot(colar[0], colar[i], label=df.columns[i])
-        plt.xlabel(df.columns[0])
-        plt.legend()
-        plt.title(filename)
-        plt.show()
-
-        # for column_name in df.columns:
-        #     column_data = df[column_name]
-        #     print(f"Column Name: {column_name}")
-        #     print(column_data)
-        #     print("\n" + "-"*40 + "\n")  # Separator between columns
-        # t = data[1:,0]
-        # x = data[1:,1]
-        # y = data[1:,2]
-        # z = data[1:,3]
-        # n = t[0] - np.mod(t[0],10)
-        # t = t - n
-        # plt.plot(t, x, label='x')
-        # plt.plot(t, y, label='y')
-        # plt.plot(t, z, label='z')
-        # plt.title(filename)
-        # plt.legend()
-        # plt.show()
+    MASS = 0.05
+    battery = readcsv('battery.csv')
+    position = readcsv('position.csv')
+    acceleration = readcsv('acceleration.csv')
+    t = acceleration[0]
+    power = acceleration[1]*position[1]*MASS*t
+    fig, axs = plt.subplots(2, layout='constrained')
+    fig.suptitle('Drone power consumption and battery voltage')
+    axs[0].plot(t, power, label='power')
+    axs[0].set_xlabel('Time (s)')
+    axs[0].set_ylabel('Power (Watt)')
+    axs[1].plot(t, battery[1], label='batV')
+    axs[1].set_xlabel('Time (s)')
+    axs[1].set_ylabel('Voltage (V)')
+    plt.show()
+    pos3d('position.csv')
 
 
-# x = data[1:,0]
-# y = data[1:,1]
-# z = data[1:,2]
-# deltax = data[1:,3]
-# deltay = data[1:,4]
-#r = np.sqrt(np.diff(x)**2 + np.diff(y)**2 + np.diff(z)**2)
-#dist = sumar(r)
-#dist = np.append(dist, [0,0]) #Dummy variables
 
-# t = np.arange(0, x.shape[0])
-
-#plt.plot(t, vbat/1000, label='vbat')
-#plt.plot(t, batlevel, label='batlevel')
-#plt.plot(t, dist, label='distance')
-#plt.legend()
-#plt.savefig('bat.png')
-
-#plt.plot(x, y)
-#plt.savefig('trace.png')
-
-#plt.plot(t, x, label='x')
-#plt.plot(t, y, label='y')
-#plt.plot(t, z, label='z')
-# plt.plot(t, deltax, label='dx')
-# plt.plot(t, deltay, label='dy')
-# plt.legend()
-# plt.show()
-
-
+    # for filename in glob.glob('position*'):
+    #     df = pd.read_csv(filename)
+    #     df = df.iloc[:, :-1]
+    #     colar = [df[col].values for col in df.columns]
+    #
+    #     n = colar[0][0] - np.mod(colar[0][0],10)
+    #     colar[0] = colar[0] - n
+    #
+    #
+    #     for i in range(1,len(colar)):
+    #         # dx = np.diff(colar[i])
+    #         # dx = np.concatenate(([0], dx))
+    #         plt.plot(colar[0], colar[i], label=df.columns[i])
