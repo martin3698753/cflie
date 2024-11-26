@@ -5,6 +5,7 @@ import time
 import numpy as np
 from threading import Event
 import random
+import datetime
 
 import cflib.crtp
 from cflib.crazyflie import Crazyflie
@@ -19,6 +20,9 @@ DEFAULT_HEIGHT = 0.7
 position_estimate = [0,0]
 
 deck_attached_event = Event()
+
+current_time = time.localtime()
+current_path = 'data/'+str(current_time.tm_mday)+'-'+str(current_time.tm_mon)+'-'+str(current_time.tm_hour)+'-'+str(current_time.tm_min)
 
 logging.basicConfig(level=logging.DEBUG)
 
@@ -52,7 +56,7 @@ def acc_callback(timestamp, data, logconf):
         pass
     print(data)
 
-    filename = logconf.name+'.csv'
+    filename = current_path+'/'+logconf.name+'.csv'
     names = np.array(list(data.items()))
     names = names[:,0]
 
@@ -83,6 +87,14 @@ def param_deck_flow(_, value_str):
 
 
 if __name__ == '__main__':
+    #Create dir with date
+    if not os.path.exists(current_path):
+        os.makedirs(current_path)
+    else:
+        print("Data path already exist, wait another minute LOL")
+        sys.exit()
+
+    #Drivers init
     cflib.crtp.init_drivers()
 
     with SyncCrazyflie(URI, cf=Crazyflie(rw_cache='./cache')) as scf:

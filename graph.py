@@ -5,7 +5,7 @@ import math
 import os
 import glob
 import pandas as pd
-
+import pickdir
 
 def pos3d(filename):
     df = pd.read_csv(filename)
@@ -32,6 +32,7 @@ def pos3d(filename):
 
     # Calculate the total distance
     total_distance = np.sum(distances)
+    print(total_distance)
 
     # Print the total distance
     ax.text2D(0.05, 0.95, f"Total Distance: {total_distance:.2f}", transform=ax.transAxes)
@@ -64,22 +65,25 @@ def readcsv(filename):
     return colar
 
 if __name__ == '__main__':
+    # path_dir = pickdir.choose_directory('data')
+    path_dir = 'data/26-11-24'
     MASS = 0.05
-    battery = readcsv('battery.csv')
-    position = readcsv('position.csv')
-    acceleration = readcsv('acceleration.csv')
+    battery = readcsv(path_dir+'/battery.csv')
+    position = readcsv(path_dir+'/position.csv')
+    acceleration = readcsv(path_dir+'/acceleration.csv')
     t = acceleration[0]
     power = acceleration[1]*position[1]*MASS*t
     fig, axs = plt.subplots(2, layout='constrained')
-    fig.suptitle('Drone power consumption and battery voltage')
     axs[0].plot(t, power, label='power')
     axs[0].set_xlabel('Time (s)')
     axs[0].set_ylabel('Power (Watt)')
+    axs[0].set_title('Power consumption')
     axs[1].plot(t, battery[1], label='batV')
     axs[1].set_xlabel('Time (s)')
     axs[1].set_ylabel('Voltage (V)')
+    axs[1].set_title('Battery voltage consumption')
     plt.show()
-    pos3d('position.csv')
+    pos3d(path_dir+'/position.csv')
 
 
 
