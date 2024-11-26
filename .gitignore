@@ -2,3 +2,4 @@ env/
 cache/
 crazyflie-lib-python/
 crazyflie-clients-python/
+__pycache__/
