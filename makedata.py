@@ -1,11 +1,16 @@
 import numpy as np
 
 def data(a):
-    ws = 5
+    ws = 10 #Window size
     row = np.zeros(ws-1)
+    inputs = np.zeros((0, ws-1))
+    outputs = np.empty(0)
 
-    for i in range(a.size):
+    for i in range(a.size - ws + 1):
         for j in range(ws-1):
             row[j] = a[i+j]
-        print(row) #inputs
-        print(a[i+ws-1]) #output
+        inputs = np.vstack((inputs, row))
+        val = a[i+ws-1]
+        outputs = np.append(outputs, val)
+
+    return inputs, outputs
