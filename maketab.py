@@ -84,4 +84,4 @@ def power(dirname):
     pos = position(dirname)
     t = 0.01 #10 ms
     mass = 0.05
-    return (mass*acc*pos)/10
+    return (mass*acc*pos)/t

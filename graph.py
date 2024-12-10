@@ -8,59 +8,48 @@ import pandas as pd
 import pickdir
 import maketab as mt
 import makedata as md
-import neuron
+from neuron import LNU
+from neuron import window
+from sklearn import preprocessing
+
+def norm(s):
+    scaler = preprocessing.MinMaxScaler()
+    s = s.reshape((len(s), 1))
+    scaler = scaler.fit(s)
+    d = scaler.transform(s)
+    return d
 
 
 if __name__ == '__main__':
     # path_dir = pickdir.choose_directory('data')
     path_dir = 'data/26-11-24/'
     battery = mt.battery(path_dir)
+    power = mt.power(path_dir)
     t = mt.time(path_dir)
-    ins, outs = md.data(battery)
-    print(ins.shape)
-    print(outs.shape)
 
-    # Assuming you have your data in X (inputs) and y (outputs)
-    X = outs  # 100 samples, each with 9 features
-    y = ins  # 100 target values
+    power = norm(power)
+    battery = norm(battery)
+    # x, y = window(power, battery)
+    # print(x.shape, y.shape)
+    plt.scatter(t, power, s=.5, label='power')
+    plt.scatter(t, battery, s=.5, label='battery')
+    #plt.ylim(2.5,4.5)
+    #plt.xlim(50000, 60000)
+    plt.legend()
+    plt.show()
 
-    # Create a QNU instance
-    qnu = neuron.QNU()
+    # net = LNU()
+    # result = net.train(power, battery)
+    #
+    # print("Model Performance:")
+    # print(f"Mean Squared Error: {result['mse']:.4f}")
+    # print(f"Mean Absolute Error: {result['mae']:.4f}")
+    # net.visual(result)
 
-    # Training loop
-    num_epochs = 100
-    learning_rate = 0.01
 
-    for epoch in range(num_epochs):
-        for i in range(len(X)):
-            # Forward pass
-            y_pred = qnu.forward(X[i].reshape(1, 9))
+from mpl_toolkits.mplot3d import Axes3D
 
-            # Calculate loss (e.g., mean squared error)
-            loss = np.mean((y_pred - y[i])**2)
-
-            # Calculate gradients
-            dL_dout = 2 * (y_pred - y[i]) / X.shape[0]
-
-            # Backpropagate
-            qnu.backward(X[i].reshape(1, 9), dL_dout)
-
-            # Print loss every 10 epochs
-            if epoch % 10 == 0:
-                print(f"Epoch {epoch}, Loss: {loss:.4f}")
-
-    # position = readcsv(path_dir+'position.csv')
-    # acceleration = readcsv(path_dir+'acceleration.csv')
-    # t = acceleration[0]
-    # power = acceleration[1]*position[1]*MASS
-    # fig, axs = plt.subplots(2, layout='constrained')
-    # axs[0].plot(t, power, label='power')
-    # axs[0].set_xlabel('Time (s)')
-    # axs[0].set_ylabel('Power (Watt)')
-    # axs[0].set_title('Power consumption')
-    # axs[1].plot(t, battery[1], label='batV')
-    # axs[1].set_xlabel('Time (s)')
-    # axs[1].set_ylabel('Voltage (V)')
-    # axs[1].set_title('Battery voltage consumption')
-    # plt.show()
-    # pos3d(path_dir+'position.csv')
+from NN.dense import Dense
+from NN.activations import Tanh
+from NN.losses import mse, mse_prime
+from NN.network import train, predict
