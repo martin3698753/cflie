@@ -8,7 +8,7 @@ import pandas as pd
 import pickdir
 import maketab as mt
 import makedata as md
-from neuron import LNU
+import neuron
 from neuron import window
 from sklearn import preprocessing
 
@@ -27,10 +27,11 @@ if __name__ == '__main__':
     power = mt.power(path_dir)
     t = mt.time(path_dir)
 
-    power = norm(power)
-    battery = norm(battery)
-    # x, y = window(power, battery)
-    # print(x.shape, y.shape)
+    #power = norm(power)
+    #battery = norm(battery)
+    x, y = window(power, battery)
+    neuron.train_lin(x, y)
+    s = neuron.predict(power)
     plt.scatter(t, power, s=.5, label='power')
     plt.scatter(t, battery, s=.5, label='battery')
     #plt.ylim(2.5,4.5)
