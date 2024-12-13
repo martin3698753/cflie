@@ -6,6 +6,18 @@ import os
 import glob
 import pandas as pd
 
+def window(power, battery, n=10):
+    x, y = [], []
+    for i in range(len(power) - n):
+        # Create input sequence of power measurements
+        x.append(power[i:i+n])
+        # Target is the next battery voltage
+        y.append(battery[i+n])
+    x = np.array(x)
+    y = np.array(y)
+    x = x.reshape(x.shape[0], -1)
+    return x, y
+
 def pos3d(filename):
     df = pd.read_csv(filename)
     df = df.iloc[:, :-1]
