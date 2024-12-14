@@ -1,4 +1,9 @@
-import pickdir
+import read
+import time
 
-d = pickdir.choose_directory('data')
-print(f"Chosen directory: {d}")
+joystick = read.main()
+
+while(True):
+    b = read.stop(joystick)
+    print(b.type)
+    time.sleep(0.5)

@@ -7,44 +7,50 @@ from threading import Event
 import random
 import datetime
 
+import read
+
 import cflib.crtp
 from cflib.crazyflie import Crazyflie
 from cflib.crazyflie.log import LogConfig
 from cflib.crazyflie.syncCrazyflie import SyncCrazyflie
 from cflib.positioning.motion_commander import MotionCommander
 from cflib.utils import uri_helper
+from cflib.crazyflie.commander import Commander
 
 URI = uri_helper.uri_from_env(default='radio://0/80/2M/E7E7E7E7E7')
 
-DEFAULT_HEIGHT = 0.7
+DEFAULT_HEIGHT = 0.4
 position_estimate = [0,0]
 
 deck_attached_event = Event()
 
 current_time = time.localtime()
-current_path = 'data/'+str(current_time.tm_mday)+'-'+str(current_time.tm_mon)+'-'+str(current_time.tm_hour)+'-'+str(current_time.tm_min)
+current_path = 'data/'+str(current_time.tm_mday)+'-'+str(current_time.tm_mon)+'-'+str(current_time.tm_hour)+'-'+str(current_time.tm_min)+'-'+str(current_time.tm_sec)
 
 logging.basicConfig(level=logging.DEBUG)
+
+joystick = read.main()
 
 def move(scf):
     with MotionCommander(scf, default_height=DEFAULT_HEIGHT) as mc:
         BOX_LIMIT = 0.5
         body_x_cmd = 0.2 #velocity
         body_y_cmd = 0.1
+        x = 0
+        y = 0
 
-        while (1):
-            max_vel = random.uniform(0.5, 1)
-            if position_estimate[0] > BOX_LIMIT:
-                body_x_cmd=-max_vel
-            elif position_estimate[0] < -BOX_LIMIT:
-                body_x_cmd=max_vel
-            if position_estimate[1] > BOX_LIMIT:
-                body_y_cmd=-max_vel
-            elif position_estimate[1] < -BOX_LIMIT:
-                body_y_cmd=max_vel
-
-            mc.start_linear_motion(body_x_cmd, body_y_cmd, 0)
-            time.sleep(0.1)
+        while (True):
+            x, y = read.read(joystick)
+            # max_vel = random.uniform(0.5, 1)
+            # if position_estimate[0] > BOX_LIMIT:
+            #     body_x_cmd=-max_vel
+            # elif position_estimate[0] < -BOX_LIMIT:
+            #     body_x_cmd=max_vel
+            # if position_estimate[1] > BOX_LIMIT:
+            #     body_y_cmd=-max_vel
+            # elif position_estimate[1] < -BOX_LIMIT:
+            #     body_y_cmd=max_vel
+        mc.start_linear_motion(x, y, 0, 0)
 
 
 def acc_callback(timestamp, data, logconf):
@@ -54,7 +60,7 @@ def acc_callback(timestamp, data, logconf):
         position_estimate[1] = data['stateEstimate.y']
     except:
         pass
-    print(data)
+    #print(data)
 
     filename = current_path+'/'+logconf.name+'.csv'
     names = np.array(list(data.items()))
