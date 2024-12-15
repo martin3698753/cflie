@@ -4,6 +4,6 @@ import time
 joystick = read.main()
 
 while(True):
-    b = read.stop(joystick)
-    print(b.type)
+    x = read.read(joystick)
+    print(x)
     time.sleep(0.5)

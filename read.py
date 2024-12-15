@@ -64,6 +64,7 @@ def main():
     # finally:
     #     # Stop raw reading and close the device
     #     joystick_reader.stop_raw_reading()
+
 def read(joystick_reader):
     axes, buttons, mapped_values = joystick_reader.read_raw_values()
     # print(axes[0]) #left right of left stick
@@ -71,7 +72,7 @@ def read(joystick_reader):
     # print(axes[3]) #left right of right stick
     # print(axes[4]) #up down of right stick
     # print('----------------------------------------------')
-    return axes[0], axes[1]
+    return axes[0], axes[1], axes[3]*15
 
 def stop(joystick_reader):
     axes, buttons, mapped_values = joystick_reader.read_raw_values()
@@ -79,6 +80,15 @@ def stop(joystick_reader):
         return True
     else:
         return False
+
+def up_down(joystick_reader):
+    axes, buttons, mapped_values = joystick_reader.read_raw_values()
+    if (axes[5] > 0):
+        return 0.001
+    elif (axes[2] > 0):
+        return -0.001
+    else:
+        return 0
 
 # if __name__ == "__main__":
 #     joystick = main()
