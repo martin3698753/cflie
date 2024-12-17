@@ -6,7 +6,7 @@ import os
 import glob
 import pandas as pd
 
-def window(power, battery, n=10):
+def window(power, battery, n):
     x, y = [], []
     for i in range(len(power) - n):
         # Create input sequence of power measurements

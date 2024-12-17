@@ -56,56 +56,7 @@ def prepare_data(df, n_steps):
     df.dropna(inplace=True)
     return df
 
-l = 1000
-t = np.linspace(0, 8*np.pi, l)
-y = np.sin(t) + np.exp(t/8) + np.random.rand(l)
-
-df = pd.DataFrame({
-    'time':t,
-    'y':y,
-})
-
-lookback = 7
-df = prepare_data(df, lookback)
-df = scale_df(df)
-
-X = df[:, 1:]
-y = df[:, 0]
-
-X = dc(np.flip(X, axis=1))
-split_index = int(len(X) * 0.75)
-
-X_train = X[:split_index]
-X_test = X[split_index:]
-
-y_train = y[:split_index]
-y_test = y[split_index:]
-
-X_train = X_train.reshape((-1, lookback, 1))
-X_test = X_test.reshape((-1, lookback, 1))
-y_train = y_train.reshape((-1, 1))
-y_test = y_test.reshape((-1, 1))
-
-X_train = torch.tensor(X_train).float()
-y_train = torch.tensor(y_train).float()
-X_test = torch.tensor(X_test).float()
-y_test = torch.tensor(y_test).float()
-
-train_dataset = TimeSeriesDataset(X_train, y_train)
-test_dataset = TimeSeriesDataset(X_test, y_test)
-
-batch_size = 16
-
-train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
-test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False)
-
-
-model = LSTM(1, 4, 1)
-model.to(device)
-
-print(X_train.shape)
-
-def train_one_epoch():
+def train_one_epoch(epoch, model, train_loader, optimizer, loss_function):
     model.train(True)
     print(f'Epoch: {epoch + 1}')
     running_loss = 0.0
@@ -128,7 +79,7 @@ def train_one_epoch():
             running_loss = 0.0
     print()
 
-def validate_one_epoch():
+def validate_one_epoch(model, test_loader, loss_function):
     model.train(False)
     running_loss = 0.0
 
@@ -146,21 +97,73 @@ def validate_one_epoch():
     print('***************************************************')
     print()
 
-learning_rate = 0.001
-num_epochs = 100
-loss_function = nn.MSELoss()
-optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
 
-for epoch in range(num_epochs):
-    train_one_epoch()
-    validate_one_epoch()
+def show(X, y, model):
+    with torch.no_grad():
+        predicted = model(X.to(device)).to('cpu').numpy()
+        
+    plt.plot(y, label='Actual')
+    plt.plot(predicted, label='Predicted')
+    plt.xlabel('t')
+    plt.ylabel('y')
+    plt.legend()
+    plt.show()
 
-with torch.no_grad():
-    predicted = model(X_train.to(device)).to('cpu').numpy()
+def setup(t, y):
+    lookback = 10 #Window size
+    
+    df = pd.DataFrame({
+        'time':t,
+        'y':y,
+    })
+    
+    df = prepare_data(df, lookback)
+    df = scale_df(df)
+    
+    X = df[:, 1:]
+    y = df[:, 0]
+    
+    X = dc(np.flip(X, axis=1))
+    split_index = int(len(X) * 0.75)
+    
+    X_train = X[:split_index]
+    X_test = X[split_index:]
+    
+    y_train = y[:split_index]
+    y_test = y[split_index:]
+    
+    X_train = X_train.reshape((-1, lookback, 1))
+    X_test = X_test.reshape((-1, lookback, 1))
+    y_train = y_train.reshape((-1, 1))
+    y_test = y_test.reshape((-1, 1))
+    
+    X_train = torch.tensor(X_train).float()
+    y_train = torch.tensor(y_train).float()
+    X_test = torch.tensor(X_test).float()
+    y_test = torch.tensor(y_test).float()
+    
+    train_dataset = TimeSeriesDataset(X_train, y_train)
+    test_dataset = TimeSeriesDataset(X_test, y_test)
+    
+    batch_size = 16
+    
+    train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
+    test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False)
+    return X_train, y_train, X_test, y_test, train_loader, test_loader
 
-plt.plot(y_train, label='Actual Close')
-plt.plot(predicted, label='Predicted Close')
-plt.xlabel('Day')
-plt.ylabel('Close')
-plt.legend()
-plt.show()
+def init(t, y):
+    model = LSTM(1, 4, 1)
+    model.to(device)
+
+    X_train, y_train, X_test, y_test, train_loader, test_loader = setup(t, y)
+    
+    learning_rate = 0.001
+    num_epochs = 50
+    loss_function = nn.MSELoss()
+    optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
+        
+    for epoch in range(num_epochs):
+        train_one_epoch(epoch, model, train_loader, optimizer, loss_function)
+        validate_one_epoch(model, test_loader, loss_function)
+    
+    show(X_test, y_test, model)

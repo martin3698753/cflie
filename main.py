@@ -6,7 +6,6 @@ import numpy as np
 from threading import Event
 import random
 import datetime
-
 import read
 
 import cflib.crtp
