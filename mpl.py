@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 from sklearn.preprocessing import MinMaxScaler
 import pandas as pd
 import maketab
+import pickdir
 
 def norm(s):
     scaler = MinMaxScaler()
@@ -11,6 +12,13 @@ def norm(s):
     scaler = scaler.fit(s)
     d = scaler.transform(s)
     return d
+
+def sigmoid(x):
+    a = 1 + np.exp(-x)
+    return (1/a)
+
+def sigmoid_prime(x):
+    return (sigmoid(x)*(1-sigmoid(x)))
 
 def relu(x):
     return np.maximum(x, 0)
@@ -46,9 +54,8 @@ def cost_prime(y, a2):
 
 
 class network:
-    def __init__(self, input_size, lr):
+    def __init__(self, input_size, lr, hidden_size = 4):
         self.lr = lr
-        hidden_size = 4
         # n = x#x.shape[0]
         # m = y#x.shape[1]
         self.w1 = np.random.rand(hidden_size, input_size)
@@ -85,19 +92,19 @@ class network:
         self.b2 = self.b2 - a*db2
         return c
 
-def init(t, power, n_steps, epoch, net):
-    x, y = window(power, power, n_steps)
+def init(x, y, n_steps, epoch, net):
     for e in range(epoch):
+        cost = np.empty(0)
         for i in range(y.size):
             X = x[i].reshape(x[i].size, 1)
             Y = y[i]
-            cost = net.cycle(X, Y)
+            now_cost = net.cycle(X, Y)
+            cost = np.append(cost, now_cost)
         if e % 50 == 0:
             print('Epoch = ', e)
-            print('Cost = ', cost)
+            print('Cost = ', np.mean(cost))
 
-def test(t, power, n_steps):
-    x, y = window(power, power, n_steps)
+def test(x, y, n_steps):
     pred = np.empty(0)
     for i in range(y.size):
         X = x[i].reshape(x[i].size, 1)
@@ -105,9 +112,33 @@ def test(t, power, n_steps):
         pred = np.append(pred, o)
 
     pred = np.concatenate((np.zeros(n_steps), pred))
-    plt.plot(t, power, label='power')
-    plt.plot(t, pred, label='pred')
-    plt.show()
+    return pred
+
+# path_dir = pickdir.choose_directory('data')+'/'
+path_dir = 'data/17-12-16-30-5/'
+battery = mt.battery(path_dir)
+battery = norm(battery)
+power = mt.power(path_dir)
+power = norm(power)
+t = mt.time(path_dir)
+
+power = power[300:]
+battery = battery[300:]
+t = t[300:]
+
+lr = 0.00001
+n = 10
+e = 4000
+net = network(n, lr, 4)
+x, y = window(power, battery, n)
+init(x, y, n, e, net)
+pred = test(x, y, n)
+plt.plot(t, pred, label='pred')
+plt.plot(t, battery, label='battery')
+plt.plot(t, power, label='power')
+plt.legend()
+plt.show()
+
 
 # l = 500
 # t = np.linspace(0, 30, l)
@@ -120,52 +151,31 @@ def test(t, power, n_steps):
 # test(t, power, n)
 
 
-
-path_dir = 'data/26-11-24/'
-battery = mt.battery(path_dir)
-#power = mt.power(path_dir)
-t = mt.time(path_dir)
-
-battery = norm(battery)
-battery = battery[400:4000]
-t = t[400:4000]
-lr = 0.00001
-n = 10
-e = 200
-net = network(n, lr)
-init(t, battery, n, e, net)
-test(t, battery, n)
-
-# l = 300
-# t = np.linspace(0, 30, l)
-# #power = np.sin(t) + np.exp(t/8) + np.random.rand(l)
-# power = t*3
-# power = norm(power)
-# power = power.reshape(-1)
-# power = norm(power)
+# train_dir = np.array(['data/17-12-16-27-41/', 'data/17-12-16-30-5/'])
+# test_dir = np.array(['data/17-12-16-34-13/'])
+# #path_dir = pickdir.choose_directory('data')+'/'
 #
+# lr = 0.00001
 # n = 10
-# x, y = window(power, power, n=10)
+# e = 300
+# net = network(n, lr)
 #
-# x = x.T
-# y = y.reshape(y.size, 1)
-# y = y.T
-# net = network(x, y)
-# net.train(x, y)
-# _,_,_,a2 = net.forward(x)
-# y = y.T
-# y = y.reshape(-1)
-# a2 = a2.T
-# a2 = a2.reshape(-1)
-# a2 = np.concatenate((np.zeros(10), a2))
-# #t = t[n:]
-# print(a2.shape)
-# print(t.shape)
-# print(power.shape)
-# # power = power[n:]
-# # battery = battery[n:]
-# plt.plot(t, a2, label='a2')
-# plt.plot(t, power, label='power')
-# #plt.plot(t, battery, label='battery')
-# plt.legend()
-# plt.show()
+# for path_dir in train_dir:
+#     battery = mt.battery(path_dir)
+#     t = mt.time(path_dir)
+#
+#     battery = norm(battery)
+#     x, y = window(battery, battery, n)
+#     init(x, y, n, e, net)
+#
+# for path_dir in test_dir:
+#     battery = mt.battery(path_dir)
+#     t = mt.time(path_dir)
+#
+#     battery = norm(battery)
+#     x, y = window(battery, battery, n)
+#     pred = test(x, y, n)
+#     plt.plot(t, pred, label='pred')
+#     plt.plot(t, battery, label='battery')
+#     plt.legend()
+#     plt.show()
