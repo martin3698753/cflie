@@ -6,6 +6,12 @@ import os
 import glob
 import pandas as pd
 
+def sum_ar(ar):
+    new_ar = np.zeros(ar.size)
+    for i in range(ar.size):
+        new_ar[i] = np.sum(ar[:i+1])
+    return new_ar
+
 def window(power, battery, n):
     x, y = [], []
     for i in range(len(power) - n):
@@ -91,9 +97,18 @@ def time(dirname):
     time = readcsv(dirname+'battery.csv')
     return time[0]
 
+def work_done(dirname):
+    acc = acceleration(dirname)
+    pos = position(dirname)
+    mass = 0.05
+    work = mass*acc*pos
+    work_sum = sum_ar(work)
+    return work_sum
+
 def power(dirname):
     acc = acceleration(dirname)
     pos = position(dirname)
     t = 0.01 #10 ms
     mass = 0.05
-    return (mass*acc*pos)/t
+    #return (mass*acc*pos)/t
+    return mass*acc*pos
