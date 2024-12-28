@@ -37,8 +37,8 @@ def denorm(normalized_data, original_min, original_max):
 
 
 if __name__ == '__main__':
-    #path_dir = pickdir.choose_directory('data')+'/'
-    path_dir = 'data/26-11-24/'
+    path_dir = pickdir.choose_directory('data')+'/'
+    #path_dir = 'data/26-11-24/'
     #path_dir = 'data/28-12-0-18-3/'
     battery = mt.battery(path_dir)
     power = mt.power(path_dir)
