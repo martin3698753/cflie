@@ -5,7 +5,6 @@ import time
 import numpy as np
 from threading import Event
 import random
-import datetime
 
 import cflib.crtp
 from cflib.crazyflie import Crazyflie
@@ -16,6 +15,7 @@ from cflib.positioning.motion_commander import MotionCommander
 
 URI = uri_helper.uri_from_env(default='radio://0/80/2M/E7E7E7E7E7')
 DEFAULT_HEIGHT = 0.4
+deck_attached_event = Event()
 
 current_time = time.localtime()
 current_path = 'data/'+str(current_time.tm_mday)+'-'+str(current_time.tm_mon)+'-'+str(current_time.tm_hour)+'-'+str(current_time.tm_min)+'-'+str(current_time.tm_sec)
@@ -36,14 +36,6 @@ def acc_callback(timestamp, data, logconf):
     filename = current_path+'/'+logconf.name+'.csv'
     names = np.array(list(data.items()))
     names = names[:,0]
-    #
-    # if not os.path.exists(filename):
-    #     f = open(filename, 'w')
-    #     f.write('time,')
-    #     for n in names:
-    #         f.write(n+',')
-    #     f.write('\n')
-    #     f.close()
 
     f = open(filename, 'a')
     f.write(str(timestamp)+',')
@@ -61,9 +53,7 @@ def param_deck_flow(_, value_str):
     else:
         print('Deck is NOT attached!')
 
-
-if __name__ == '__main__':
-    #Create dir with date
+def create_path():
     if not os.path.exists(current_path):
         os.makedirs(current_path)
     else:
@@ -73,11 +63,20 @@ if __name__ == '__main__':
     open(current_path+'/acceleration.csv', 'w').close()
     open(current_path+'/position.csv', 'w').close()
     open(current_path+'/battery.csv', 'w').close()
+    print("Created data path")
+
+if __name__ == '__main__':
+    #Create dir with date
+    create_path()
 
     # Initialize the low-level drivers
     cflib.crtp.init_drivers()
 
     with SyncCrazyflie(URI, cf=Crazyflie(rw_cache='./cache')) as scf:
+        scf.cf.param.add_update_callback(group='deck', name='bcFlow2', cb=param_deck_flow)
+        time.sleep(1)
+
+
         acconf = LogConfig(name='acceleration', period_in_ms=100)
         acconf.add_variable('acc.x', 'float')
         acconf.add_variable('acc.y', 'float')

@@ -19,6 +19,8 @@ URI = uri_helper.uri_from_env(default='radio://0/80/2M/E7E7E7E7E7')
 current_time = time.localtime()
 current_path = 'data/'+str(current_time.tm_mday)+'-'+str(current_time.tm_mon)+'-'+str(current_time.tm_hour)+'-'+str(current_time.tm_min)+'-'+str(current_time.tm_sec)
 
+DEFAULT_HEIGHT = 0.4
+
 # Only output errors from the logging framework
 logging.basicConfig(level=logging.ERROR)
 
@@ -61,7 +63,7 @@ def move_prep(scf):
     print('Taking off')
 
     for _ in range(20):
-        scf.cf.commander.send_hover_setpoint(0, 0, 0, 0.4)
+        scf.cf.commander.send_hover_setpoint(0, 0, 0, DEFAULT_HEIGHT)
         time.sleep(0.1)
     print('In air')
 
@@ -110,12 +112,12 @@ if __name__ == '__main__':
         batconf.start()
 
 
-        height = 0.4
+        height = DEFAULT_HEIGHT
         while not (read.stop(joystick)):
             c = 8
             height += read.up_down(joystick)
             x, y, z = read.read(joystick)
-            scf.cf.commander.send_zdistance_setpoint(x*c, y*c, z*c, height)
+            scf.cf.commander.send_zdistance_setpoint(x*c, y*c, z*c, height) #Why I didn't use hover instead?
         print('Landing')
 
         # for _ in range(50):
