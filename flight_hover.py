@@ -4,7 +4,6 @@ import os
 import time
 import numpy as np
 from threading import Event
-import random
 
 import cflib.crtp
 from cflib.crazyflie import Crazyflie
@@ -17,9 +16,6 @@ URI = uri_helper.uri_from_env(default='radio://0/80/2M/E7E7E7E7E7')
 DEFAULT_HEIGHT = 0.4
 deck_attached_event = Event()
 
-current_time = time.localtime()
-current_path = 'data/'+str(current_time.tm_mday)+'-'+str(current_time.tm_mon)+'-'+str(current_time.tm_hour)+'-'+str(current_time.tm_min)+'-'+str(current_time.tm_sec)
-
 # Only output errors from the logging framework
 logging.basicConfig(level=logging.ERROR)
 
@@ -27,13 +23,15 @@ logging.basicConfig(level=logging.ERROR)
 def move(scf):
     with MotionCommander(scf, default_height=DEFAULT_HEIGHT) as mc:
         while True:
-            pass
-        mc.land()
+            try:
+                pass
+            except KeyboardInterrupt:
+                mc.land()
 
 def acc_callback(timestamp, data, logconf):
     print(data)
 
-    filename = current_path+'/'+logconf.name+'.csv'
+    filename = logconf.name+'.csv'
     names = np.array(list(data.items()))
     names = names[:,0]
 
@@ -53,21 +51,21 @@ def param_deck_flow(_, value_str):
     else:
         print('Deck is NOT attached!')
 
-def create_path():
-    if not os.path.exists(current_path):
-        os.makedirs(current_path)
+def create_file(filename):
+    if os.path.exists(filename):
+        print(f"File '{filename}' already exists")
+        print(f"File '{filename}' already exists")
+        print(f"File '{filename}' already exists")
     else:
-        print("Data path already exist, WTF is happenin?")
-        sys.exit()
-    #Create csv files
-    open(current_path+'/acceleration.csv', 'w').close()
-    open(current_path+'/position.csv', 'w').close()
-    open(current_path+'/battery.csv', 'w').close()
-    print("Created data path")
+        with open(filename, 'w') as f:
+            pass
+        print(f"File '{filename}' created")
 
 if __name__ == '__main__':
-    #Create dir with date
-    create_path()
+    #Create files
+    create_file('acceleration.csv')
+    create_file('position.csv')
+    create_file('battery.csv')
 
     # Initialize the low-level drivers
     cflib.crtp.init_drivers()
@@ -95,6 +93,10 @@ if __name__ == '__main__':
         batconf.add_variable('pm.vbat', 'float')
         scf.cf.log.add_config(batconf)
         batconf.data_received_cb.add_callback(acc_callback)
+
+        if not deck_attached_event.wait(timeout=5):
+            print('No flow deck detected!')
+            sys.exit(1)
 
         acconf.start()
         posconf.start()
