@@ -37,33 +37,46 @@ def denorm(normalized_data, original_min, original_max):
 
 
 if __name__ == '__main__':
-    path_dir = pickdir.choose_directory('data')+'/'
+    #path_dir = pickdir.choose_directory('data')+'/'
     #path_dir = 'data/26-11-24/'
-    #path_dir = 'data/28-12-0-18-3/'
+    path_dir = 'data/8-1-1/'
     battery = mt.battery(path_dir)
-    power = mt.power(path_dir)
-    sp = mt.work_done(path_dir)
-    # #work = mt.work_done(path_dir)
-    # t = mt.time(path_dir)
-    t = np.arange(0, battery.size)
-    energy = 250*battery*3.6
+    t = mt.time(path_dir)*0.001
+    motor = mt.readcsv(path_dir+'motor.csv')
+    motor = motor = (motor/65535)*100
+    thr = mt.thrust(path_dir)
+    av = mt.ang_vel(path_dir)
+    #me = thr*0.05*av*0.1
+    me = ((thr[1]/4)*av[1] + (thr[2]/4)*av[2] + (thr[3]/4)*av[3] + (thr[4]/4)*av[4])*0.047*0.1*0.05
+    mech = np.sum(me)
 
-    power = norm(power)
-    battery = norm(battery)
+    mech_pred = 61*t -92
+
+    # work = norm(work)
+    # battery = norm(battery)
+    #work = mt.sum_ar(energy)
     # work = norm(work)
     # x, y = window(power, battery)
     # neuron.train_lin(x, y)
     # pred = neuron.predict_lin(power)
-    plt.text(3, 2, ('Flight time = ', battery.size*0.1/60, ' s\n', 'Consumed power = ', sp[-1], ' J'), fontsize=12, color='red')
-    plt.plot(t, power, label='work (J)')
+    # plt.plot(t, av[1], label='m1 RPM')
+    # plt.plot(t, av[2], label='m2 RPM')
+    # plt.plot(t, av[3], label='m3 RPM')
+    # plt.plot(t, av[4], label='m4 RPM')
+    #plt.plot(t, me, label='Výkon (W)')
     #plt.plot(t, energy, label='battery energy (J)')
-    #plt.plot(t, work, label='summed work (J)')
-    plt.plot(t, battery, label='battery (V)')
+    #plt.plot(t, work, label='work (J)')
+    #plt.plot(t, battery, label='baterie (V)')
+    plt.plot(t, mt.sum_ar(me), label='Energie (J)')
+    #plt.plot(t, mech_pred, label='61*t-92')
     #plt.scatter(t, pred, s=.5, label='prediction')
     #plt.ylim(2.5,4.5)
     #plt.xlim(50000, 60000)
-    plt.xlabel("time (s)")
-    plt.legend(title=('Flight time = '+str(round(battery.size*0.1/60, 3))+' min\n'+'Consumed power = '+str(round(sp[-1], 3))+' J'))
+    plt.xlabel("čas (s)")
+    #plt.text(1, 1, ('Flight time = ', battery.size*0.1/60, ' s\n', 'Consumed power = ', work_sum[-1], ' J'), fontsize=12, color='red')
+    #plt.legend(title=('Čas letu byl '+str(round(battery.size*0.1/60, 3))+' min\n'+'Energie = '+str(round(mech, 3))+' J'))
+    #plt.legend(title=('A = '+str(round(slope))+'\n'+'B = '+str(round(intercept))))
+    plt.legend()
     plt.show()
     #lstm.init(t, battery)
 
