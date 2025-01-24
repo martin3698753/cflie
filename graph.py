@@ -7,9 +7,6 @@ import glob
 import pandas as pd
 import pickdir
 import maketab as mt
-import makedata as md
-import neuron
-from neuron import window
 from sklearn import preprocessing
 import lstm
 
@@ -39,9 +36,10 @@ def denorm(normalized_data, original_min, original_max):
 if __name__ == '__main__':
     #path_dir = pickdir.choose_directory('data')+'/'
     #path_dir = 'data/26-11-24/'
-    path_dir = 'data/8-1-1/'
+    path_dir = 'data/23-1-25/'
     battery = mt.battery(path_dir)
-    t = mt.time(path_dir)*0.001
+    t = np.arange(0,battery.shape[0]*100, 100)*0.1
+
     motor = mt.readcsv(path_dir+'motor.csv')
     motor = motor = (motor/65535)*100
     thr = mt.thrust(path_dir)
@@ -63,20 +61,19 @@ if __name__ == '__main__':
     # plt.plot(t, av[2], label='m2 RPM')
     # plt.plot(t, av[3], label='m3 RPM')
     # plt.plot(t, av[4], label='m4 RPM')
-    #plt.plot(t, me, label='Výkon (W)')
+    plt.plot(t, me, label='Výkon (W)')
     #plt.plot(t, energy, label='battery energy (J)')
     #plt.plot(t, work, label='work (J)')
     #plt.plot(t, battery, label='baterie (V)')
-    plt.plot(t, mt.sum_ar(me), label='Energie (J)')
+    #plt.plot(t, mt.sum_ar(me), label='Energie (J)')
     #plt.plot(t, mech_pred, label='61*t-92')
     #plt.scatter(t, pred, s=.5, label='prediction')
     #plt.ylim(2.5,4.5)
     #plt.xlim(50000, 60000)
     plt.xlabel("čas (s)")
     #plt.text(1, 1, ('Flight time = ', battery.size*0.1/60, ' s\n', 'Consumed power = ', work_sum[-1], ' J'), fontsize=12, color='red')
-    #plt.legend(title=('Čas letu byl '+str(round(battery.size*0.1/60, 3))+' min\n'+'Energie = '+str(round(mech, 3))+' J'))
+    plt.legend(title=('Čas letu byl '+str(round(battery.size*0.1/60, 3))+' min\n'+'Energie = '+str(round(mech, 3))+' J'))
     #plt.legend(title=('A = '+str(round(slope))+'\n'+'B = '+str(round(intercept))))
-    plt.legend()
     plt.show()
     #lstm.init(t, battery)
 
