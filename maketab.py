@@ -69,16 +69,20 @@ def readcsv(filename):
 
     n = colar[0][0] - np.mod(colar[0][0],10)
     colar[0] = colar[0] - n
+    colar[0] = colar[0] - colar[0][0]
 
     return colar
 
 def position(dirname):
     colar = readcsv(dirname+'position.csv')
-    for i in range(1,4):
-        dx = np.diff(colar[i]) #delta position
-        colar[i] = np.concatenate(([0], dx)) #Keep number of dim same
-
-    return colar[1], colar[2], colar[3]
+    dist = np.diff(colar[1])
+    print(np.sum(dist))
+#     for i in range(1,4):
+#         dx = np.diff(colar[i]) #delta position
+#         colar[i] = np.concatenate(([0], dx)) #Keep number of dim same
+#
+#
+#     return colar[1], colar[2], colar[3]
 
 # def dist(dirname):
 #     d,_ = position(dirname)
@@ -103,10 +107,10 @@ def acceleration(dirname):
 
 def battery(dirname):
     bat = readcsv(dirname+'battery.csv')
-    return bat[1]
+    return bat
 
 def time(dirname):
-    time = readcsv(dirname+'battery.csv')
+    time = readcsv(dirname+'motor.csv')
     return time[0]
 
 def thrust(dirname):
