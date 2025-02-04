@@ -36,7 +36,7 @@ def denorm(normalized_data, original_min, original_max):
 if __name__ == '__main__':
     #path_dir = pickdir.choose_directory('data')+'/'
     #path_dir = 'data/26-11-24/'
-    path_dir = 'data/23-1-25/'
+    path_dir = 'data/31-1-25/'
     battery = mt.battery(path_dir)
     t = np.arange(0,battery.shape[0]*100, 100)*0.1
 
