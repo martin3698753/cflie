@@ -75,20 +75,27 @@ def readcsv(filename):
 
 def position(dirname):
     colar = readcsv(dirname+'position.csv')
-    dist = np.diff(colar[1])
-    print(np.sum(dist))
-#     for i in range(1,4):
-#         dx = np.diff(colar[i]) #delta position
-#         colar[i] = np.concatenate(([0], dx)) #Keep number of dim same
-#
-#
-#     return colar[1], colar[2], colar[3]
+    t = colar[0]
+    x = colar[1]
+    y = colar[2]
+    z = colar[3]
+    distances = np.sqrt(np.diff(x)**2 + np.diff(y)**2 + np.diff(z)**2)
+    total = np.sum(distances)
 
-# def dist(dirname):
-#     d,_ = position(dirname)
-#     dist = np.sum(d)
-#     dist = round(dist, 3)
-#     return dist
+    # fig = plt.figure()
+    # ax = fig.add_subplot(111, projection='3d')
+    #
+    # ax.scatter(x, y, z, c=t, cmap='viridis')
+    #
+    # ax.scatter(x[0], y[0], z[0], color='red', s=100, label='Start')
+    # ax.scatter(x[-1], y[-1], z[-1], color='blue', s=100, label='End')
+    #
+    # # Print the total distance
+    # ax.text2D(0.05, 0.95, f"Total Distance: {total:.2f}", transform=ax.transAxes)
+    #
+    # ax.legend()
+    # plt.show()
+    return total
 
 def velocity(dirname):
     posx, posy, posz = position(dirname)

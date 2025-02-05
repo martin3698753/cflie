@@ -8,5 +8,10 @@
 ![](pics/31.png)
 ![](pics/31sum.png)
 ## Nahoru a dolu po pul metru
-![](pics/upndown.png)
-![](pics/upndownsum.png)
+- rychlost: 0.4 m/s
+![](pics/4-2.png)
+![](pics/4-2sum.png)
+## Dopredu 1.5 m a zpatky
+- Rychlost: 0.5 m/s
+![](pics/5-2.png)
+![](pics/5-2sum.png)
