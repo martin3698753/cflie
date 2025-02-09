@@ -2,6 +2,7 @@ import logging
 from cfclient.utils.config import Config
 from cfclient.utils.input import JoystickReader
 import time
+import numpy as np
 
 # Set up logging to see what's happening
 # logging.basicConfig(level=logging.INFO)
@@ -72,11 +73,18 @@ def read(joystick_reader):
     # print(axes[3]) #left right of right stick
     # print(axes[4]) #up down of right stick
     # print('----------------------------------------------')
-    return axes[0], axes[1], axes[3]*15
+    return round(-axes[0], 1), round(-axes[1], 1), round(axes[3], 1)
 
 def stop(joystick_reader):
     axes, buttons, mapped_values = joystick_reader.read_raw_values()
     if(buttons[5]==1):
+        return True
+    else:
+        return False
+
+def crit(joystick_reader):
+    axes, buttons, mapped_values = joystick_reader.read_raw_values()
+    if (buttons[1] == 1):
         return True
     else:
         return False
