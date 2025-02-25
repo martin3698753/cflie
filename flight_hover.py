@@ -15,16 +15,20 @@ from cflib.utils import uri_helper
 import batpred as bp
 
 URI = uri_helper.uri_from_env(default='radio://0/80/2M/E7E7E7E7E7')
-DEFAULT_HEIGHT = 0.4
+DEFAULT_HEIGHT = 0.001
 deck_attached_event = Event()
 INTERVAL = 100 #ms
+#
+seq_length = bp.seq_length
+x_pred = np.empty(0)
 
 # Only output errors from the logging framework
-#logging.basicConfig(level=logging.ERROR)
+logging.basicConfig(level=logging.ERROR)
 
 
 def move(scf):
     with MotionCommander(scf, default_height=DEFAULT_HEIGHT) as mc:
+
         while True:
             try:
                 pass
@@ -47,11 +51,19 @@ def acc_callback(timestamp, data, logconf):
     f = open(filename, 'a')
     f.write(str(timestamp)+',')
     for n in names:
-        print(n)
         f.write(str(data[n])+',')
     f.write('\n')
     f.close()
-    print(data)
+
+    global x_pred, seq_length
+    try:
+        x_pred = np.append(x_pred, data["pm.vbat"])
+        if len(x_pred) >= seq_length:
+            print(f"x_pred: {x_pred}")
+            bp.pred(x_pred)
+            x_pred = np.empty(0)
+    except Exception as e:
+        print(f"error: {e}")
 
 def param_deck_flow(_, value_str):
     value = int(value_str)

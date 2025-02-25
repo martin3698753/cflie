@@ -50,11 +50,6 @@ def eval(x, t):
         reg = pred[0]*t**2 + pred[1]*t + pred[2]
         print(f"result: {reg[0]}")
 
-signal = np.empty(0)
 def pred(x):
-    signal = np.append(signal, x)
-    if len(signal) >= seq_length:
-        print(signal)
-        signal = np.empty(0)
-
-
+    t = np.linspace(0, 1, seq_length)
+    eval(x, t)
