@@ -12,13 +12,15 @@ from cflib.crazyflie.syncCrazyflie import SyncCrazyflie
 from cflib.positioning.motion_commander import MotionCommander
 from cflib.utils import uri_helper
 
+import batpred as bp
+
 URI = uri_helper.uri_from_env(default='radio://0/80/2M/E7E7E7E7E7')
 DEFAULT_HEIGHT = 0.4
 deck_attached_event = Event()
 INTERVAL = 100 #ms
 
 # Only output errors from the logging framework
-logging.basicConfig(level=logging.ERROR)
+#logging.basicConfig(level=logging.ERROR)
 
 
 def move(scf):
@@ -45,6 +47,7 @@ def acc_callback(timestamp, data, logconf):
     f = open(filename, 'a')
     f.write(str(timestamp)+',')
     for n in names:
+        print(n)
         f.write(str(data[n])+',')
     f.write('\n')
     f.close()
