@@ -21,6 +21,9 @@ psw = power_switch.PowerSwitch(URI)
 DEFAULT_HEIGHT = 0.4
 INTERVAL = 100 #ms
 
+x_test = np.zero(30)
+t_test = np.zero(30)
+
 # Only output errors from the logging framework
 logging.basicConfig(level=logging.ERROR)
 
