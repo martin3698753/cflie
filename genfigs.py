@@ -12,6 +12,8 @@ import pandas as pd
 import pickdir
 import maketab as mt
 
+plt.rcParams['mathtext.fontset'] = 'cm'  # Use Computer Modern font for math text
+
 def load_data(path_dir, sig_type):
     if sig_type == "bat":
         t, signal = mt.battery(path_dir)
@@ -42,25 +44,93 @@ def denorm(normalized_data, original_min, original_max):
     denormalized_data = normalized_data * (original_max - original_min) + original_min
     return denormalized_data
 
+def relu():
+    x = np.linspace(-5, 5, 1000)
+    y = np.maximum(0, x)
+
+    plt.figure(figsize=(8, 6))
+    plt.plot(x, y, label=r'ReLU: $f(x) = \max(0, x)$', linewidth=2)
+
+    plt.xlabel('x', fontsize=14)
+    plt.ylabel('f(x)', fontsize=14)
+
+    plt.grid(True, linestyle='--', alpha=0.5)
+    plt.legend(fontsize=12)
+
+    plt.savefig("pics/figs/relu.pdf")
+    print("saved relu function")
+    #plt.show()
+    plt.close
+
+def sigmoid():
+    x = np.linspace(-5, 5, 1000)
+    y = 1 / (1 + np.exp(-x))  # Sigmoid function
+
+    plt.figure(figsize=(8, 6))
+    plt.plot(x, y, label=r'Sigmoid: $f(x) = \frac{1}{1 + e^{-x}}$', linewidth=2)
+
+    plt.xlabel('x', fontsize=14)
+    plt.ylabel('f(x)', fontsize=14)
+
+    plt.grid(True, linestyle='--', alpha=0.5)
+    plt.legend(fontsize=12)
+
+    plt.savefig("pics/figs/sigmoid.pdf")
+    print("saved sigmoid function")
+    #plt.show()
+    plt.close()
+
+def tanh():
+    x = np.linspace(-5, 5, 1000)
+    y = np.tanh(x)  # Tanh function
+
+    plt.figure(figsize=(8, 6))
+    plt.plot(x, y, label=r'Tanh: $f(x) = \frac{e^{x} - e^{-x}}{e^{x} + e^{-x}}$', linewidth=2)
+
+    plt.xlabel('x', fontsize=14)
+    plt.ylabel('f(x)', fontsize=14)
+
+    plt.grid(True, linestyle='--', alpha=0.5)
+    plt.legend(fontsize=12)
+
+    plt.savefig("pics/figs/tanh.pdf")
+    print("saved function tanh")
+    #plt.show()
+    plt.close()
+
 def reg(num, n, start, sig_type):
     path_dir = "data/"+num+"/"
     signal, tleft, t = np.array(load_data(path_dir, sig_type))[:, start:start+n]
 
     fig, (ax1, ax2) = plt.subplots(nrows=2, ncols=1, figsize=(8, 6))
 
-    ax1.plot(t, signal, label='g(t)', color='tab:blue')
-    ax1.set_xlabel('Čas t(s)', fontsize=10)
+    ax1.plot(t, signal, label=r'$g(\Delta t)$', color='tab:blue')
+    ax1.set_xlabel(r'$\Delta t$', fontsize=10)
     slope2, slope, intercept = np.polyfit(t, signal, 2)
     mean = np.mean(signal)
     std = np.std(signal)
-    ax1.plot(t, slope2*t**2 + slope*t + intercept, color="tab:green")
-    ax1.legend()
+    ax1.plot(t, slope2*t**2 + slope*t + intercept, color="tab:green", label=r"$r_1(\Delta t)$")
+    ax1.axhline(mean, color='grey', linestyle='--', label=r'$m_1(g)$')
+    ax1.axhline(mean+std, color='tab:grey', linestyle=':', label=r'$s_1(g)$')
+    ax1.axhline(mean-std, color='tab:grey', linestyle=':')
+    ax1.legend(fontsize=12)
 
-    ax2.plot(t, tleft, label='f(t)', color='tab:orange')
-    ax2.set_xlabel('Čas t(s)', fontsize=10)
-    ax2.legend()
+    ax2.plot(t, tleft, label=r'$f(\Delta t)$', color='tab:orange')
+    ax2.set_xlabel(r'$\Delta t$', fontsize=10)
+    slope2, slope, intercept = np.polyfit(t, tleft, 2)
+    mean = np.mean(tleft)
+    std = np.std(tleft)
+    ax2.plot(t, slope2*t**2 + slope*t + intercept, linestyle='--', color="tab:green", label=r"$r_2(\Delta t)$")
+    ax2.axhline(mean, color='grey', linestyle='--', label=r'$m_2(f)$')
+    ax2.axhline(mean+std, color='tab:grey', linestyle=':', label=r'$s_2(f)$')
+    ax2.axhline(mean-std, color='tab:grey', linestyle=':')
+    ax2.legend(fontsize=12)
 
-    plt.show()
+    plt.tight_layout()
+    plt.savefig('pics/figs/reg1.pdf')
+    print("saved a picture of regression 1")
+    #plt.show()
+    plt.close()
 
 def linear(num, n, start, sig_type):
     path_dir = "data/"+num+"/"
@@ -206,4 +276,7 @@ if __name__ == '__main__':
     # gen('5-2-25')
     # gen('21-2-25')
     # linear('5-2-25', 300, 1000, 'bat') # n indicate window size, start is starting position of that window, sig_type can be 'bat' or 'motor'
-    reg('5-2-25', 300, 1000, 'bat')
+    # reg('5-2-25', 300, 1000, 'bat')
+    # relu()
+    # sigmoid()
+    # tanh()

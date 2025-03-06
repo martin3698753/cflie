@@ -40,6 +40,7 @@ model = MLP(input_size, hidden_size, output_size)
 model.load_state_dict(checkpoint['state_dict'])
 
 def eval(x, t):
+    filename = "pred.csv"
     model.eval()
     with torch.no_grad():
         slope2, slope, intercept = np.polyfit(t, x, 2)
@@ -47,8 +48,14 @@ def eval(x, t):
         std = np.std(x)
         X = torch.tensor((slope2, slope, intercept, mean, std), dtype=torch.float32)
         pred = model(X).numpy()
-        reg = pred[0]*t**2 + pred[1]*t + pred[2]
-        print(f"result: {reg[0]}")
+        f = open(filename, 'a')
+        for n in pred:
+            f.write(str(n)+',')
+        f.write('\n')
+        f.close()
+        print("-----------------------------------")
+        print(f"result: {pred[3]}") #mean
+        print("-----------------------------------")
 
 def pred(x):
     t = np.linspace(0, 1, seq_length)
