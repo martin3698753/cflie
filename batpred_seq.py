@@ -50,11 +50,9 @@ class BatSeqModel:
 
     def pred(self, x):
         self.memory = np.append(self.memory, x)
-        print("appended")
         if len(self.memory) >= self.n:
             self.eval(self.memory)
             self.memory = np.empty(0)
-            print(f"memory nulled: {memory}")
 
     def done(self):
         t = np.arange(len(self.signal))  # Create time axis

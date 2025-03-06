@@ -60,7 +60,7 @@ def acc_callback(timestamp, data, logconf):
         vbat = data['pm.vbat']
         model.pred(float(vbat))
     except Exception as e:
-        print(f"Error: {e}")
+        #print(f"Error: {e}")
         pass
 
     #model.pred(float(data["pm.vbat"]))
