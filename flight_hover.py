@@ -12,18 +12,18 @@ from cflib.crazyflie.syncCrazyflie import SyncCrazyflie
 from cflib.positioning.motion_commander import MotionCommander
 from cflib.utils import uri_helper
 
-import batpred as bp
+from batpred_seq import BatSeqModel
 
 URI = uri_helper.uri_from_env(default='radio://0/80/2M/E7E7E7E7E7')
-DEFAULT_HEIGHT = 0.3
+DEFAULT_HEIGHT = 0.2
 deck_attached_event = Event()
 INTERVAL = 100 #ms
 #
-seq_length = bp.seq_length
-x_pred = np.empty(0)
 
 # Only output errors from the logging framework
 logging.basicConfig(level=logging.ERROR)
+
+model = BatSeqModel()
 
 
 def move(scf):
@@ -55,15 +55,16 @@ def acc_callback(timestamp, data, logconf):
     f.write('\n')
     f.close()
 
-    global x_pred, seq_length
+    global model
     try:
-        x_pred = np.append(x_pred, data["pm.vbat"])
-        if len(x_pred) >= seq_length:
-            bp.pred(x_pred)
-            x_pred = np.empty(0)
+        vbat = data['pm.vbat']
+        model.pred(float(vbat))
     except Exception as e:
-        #print(f"error: {e}")
+        print(f"Error: {e}")
         pass
+
+    #model.pred(float(data["pm.vbat"]))
+
 
 def param_deck_flow(_, value_str):
     value = int(value_str)

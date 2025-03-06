@@ -2,6 +2,7 @@ import torch
 import torch.nn as nn
 import numpy as np
 import matplotlib.pyplot as plt
+import os
 
 class MLP(nn.Module):
     def __init__(self, input_size, hidden_size, output_size):
@@ -42,14 +43,18 @@ class BatSeqModel:
             pred = self.model(test_input).squeeze().numpy()
             self.g = np.append(self.g, pred)  # Append prediction to g
             self.signal = np.append(self.signal, data)  # Append input data to signal
-            print("Prediction:")
-            print(pred.mean())
+            #
+            #
+            print(f"prediction: {pred.mean()}")
+            self.write_to_file(pred)
 
     def pred(self, x):
         self.memory = np.append(self.memory, x)
+        print("appended")
         if len(self.memory) >= self.n:
             self.eval(self.memory)
             self.memory = np.empty(0)
+            print(f"memory nulled: {memory}")
 
     def done(self):
         t = np.arange(len(self.signal))  # Create time axis
@@ -57,3 +62,15 @@ class BatSeqModel:
         plt.plot(t, self.g, label='Predictions')  # Plot predictions
         plt.legend()
         plt.show()
+
+    def write_to_file(self, pred):
+        filename = 'pred.csv'
+        if not os.path.exists(filename):
+            f = open(filename, 'w')
+            f.write('predictions'+'\n')
+            f.close()
+
+        f = open(filename, 'a')
+        for i in pred:
+            f.write(str(i)+'\n')
+        f.close()
