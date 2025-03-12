@@ -36,10 +36,12 @@ def denorm(normalized_data, original_min, original_max):
 if __name__ == '__main__':
     #path_dir = pickdir.choose_directory('data')+'/'
     #path_dir = 'data/26-11-24/'
-    path_dir = 'data/21-2-25/'
+    path_dir = 'data/6-3-25/'
     battery = mt.battery(path_dir)
-    #t = np.arange(0,battery.shape[0]*100, 100)*0.1
-    t = mt.time(path_dir)
+    t = np.arange(0,battery.shape[1]*100, 100)*0.1
+    #t = mt.time(path_dir)
+    pred = mt.prediction(path_dir)
+    print(pred.shape, battery.shape)
 
 
     motor = mt.readcsv(path_dir+'motor.csv')
@@ -49,8 +51,6 @@ if __name__ == '__main__':
     #me = thr*0.05*av*0.1
     me = ((thr[1]/4)*av[1] + (thr[2]/4)*av[2] + (thr[3]/4)*av[3] + (thr[4]/4)*av[4])*0.047*0.1*0.05
     mech = np.sum(me)
-
-    mech_pred = 61*t -92
 
     # work = norm(work)
     # battery = norm(battery)
@@ -67,7 +67,8 @@ if __name__ == '__main__':
     # plt.plot(t, me, label='Výkon (W)')
     # plt.plot(t, energy, label='battery energy (J)')
     # plt.plot(t, work, label='work (J)')
-    plt.plot(battery[0], battery[1], label='baterie (V)')
+    plt.plot(t[:len(pred)], pred)
+    plt.plot(t, norm(battery[1]), label='baterie (V)')
     # plt.plot(t, mt.sum_ar(me), label='Energie (J)')
     #plt.plot(t, mech_pred, label='61*t-92')
     #plt.scatter(t, pred, s=.5, label='prediction')
@@ -84,12 +85,3 @@ if __name__ == '__main__':
     #plt.legend(title=('Čas letu byl '+str(round(t[-1]/60000, 3))+' min\n'+'Energie = '+str(round(mech, 3))+' J\n'+ 'Uletěná vzdálenost = ' +str(round(dist,3)))+' m')
     #plt.legend(title=('A = '+str(round(slope))+'\n'+'B = '+str(round(intercept))))
     plt.show()
-    #lstm.init(t, battery)
-
-    # net = LNU()
-    # result = net.train(power, battery)
-    #
-    # print("Model Performance:")
-    # print(f"Mean Squared Error: {result['mse']:.4f}")
-    # print(f"Mean Absolute Error: {result['mae']:.4f}")
-    # net.visual(result)

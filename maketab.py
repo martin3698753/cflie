@@ -60,7 +60,6 @@ def pos3d(filename):
     # ax.legend()
     # plt.show()
 
-
 def readcsv(filename):
     df = pd.read_csv(filename)
     df = df.iloc[:, :-1] #deleting last column cause was empty and also deleting time column
@@ -71,6 +70,13 @@ def readcsv(filename):
     colar[0] = colar[0] - n
     colar[0] = colar[0] - colar[0][0]
 
+    return colar
+
+def prediction(dirname):
+    filename = dirname + 'pred.csv'
+    df = pd.read_csv(filename)
+    colar = np.array(df)
+    colar = colar.T[0]
     return colar
 
 def position(dirname):

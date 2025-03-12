@@ -12,6 +12,14 @@ import pandas as pd
 import pickdir
 import maketab as mt
 
+cutoff = 50
+
+def norm(signal):
+    norm_lower = 2
+    norm_upper = 4
+    signal = (signal - norm_lower) / (norm_upper - norm_lower)
+    return signal
+
 plt.rcParams['mathtext.fontset'] = 'cm'  # Use Computer Modern font for math text
 
 def load_data(path_dir, sig_type):
@@ -34,15 +42,6 @@ def load_data(path_dir, sig_type):
         print("Undefined sig_type")
         sys.exit(1)
 
-def norm(data):
-    min_val = np.min(data)
-    max_val = np.max(data)
-    normalized_data = (data - min_val) / (max_val - min_val)
-    return normalized_data
-
-def denorm(normalized_data, original_min, original_max):
-    denormalized_data = normalized_data * (original_max - original_min) + original_min
-    return denormalized_data
 
 def relu():
     x = np.linspace(-5, 5, 1000)
@@ -98,33 +97,57 @@ def tanh():
     #plt.show()
     plt.close()
 
+def experiment_battery_real_time(num):
+    path_dir = "data/"+num+"/"
+    battery = mt.battery(path_dir)
+    t = np.arange(0,battery.shape[1]*100, 100)*0.1
+    pred = mt.prediction(path_dir)
+
+    plt.figure(figsize=(8, 6))
+    plt.plot(t[:len(pred)], pred, label='predikce kapacity', color='tab:green')
+    plt.plot(t, norm(battery[1]), label='baterie (V)', color='tab:blue')
+    plt.xlabel("čas t(s)", fontsize=12)
+    plt.legend()
+
+    plt.savefig('pics/figs/experiment_battery_real_time.pdf')
+    print('saved fig of battery prediction in real time')
+    plt.close
+    #plt.show()
+
 def reg(num, n, start, sig_type):
     path_dir = "data/"+num+"/"
-    signal, tleft, t = np.array(load_data(path_dir, sig_type))[:, start:start+n]
+    signal, tleft, t = load_data(path_dir, sig_type)
+    signal = norm(signal[start:start+n])
+    tleft = tleft[start:start+n]
+    t = np.arange(0, len(signal))
 
     fig, (ax1, ax2) = plt.subplots(nrows=2, ncols=1, figsize=(8, 6))
 
-    ax1.plot(t, signal, label=r'$g(\Delta t)$', color='tab:blue')
+    ax1.plot(t, signal, label=r'$g_i(\Delta t)$', color='tab:blue')
     ax1.set_xlabel(r'$\Delta t$', fontsize=10)
-    slope2, slope, intercept = np.polyfit(t, signal, 2)
+    slope, intercept = np.polyfit(t, signal, 1)
+    r_t = slope*t + intercept
+    detrended_g_t = signal - r_t
+    std_detrended = np.std(detrended_g_t)
     mean = np.mean(signal)
-    std = np.std(signal)
-    ax1.plot(t, slope2*t**2 + slope*t + intercept, color="tab:green", label=r"$r_1(\Delta t)$")
-    ax1.axhline(mean, color='grey', linestyle='--', label=r'$m_1(g)$')
-    ax1.axhline(mean+std, color='tab:grey', linestyle=':', label=r'$s_1(g)$')
-    ax1.axhline(mean-std, color='tab:grey', linestyle=':')
+    ax1.plot(t, slope*t + intercept, color="tab:green", label=r"$r_1(\Delta t)$")
+    ax1.axhline(mean, color='black', linestyle='--', label=r'$\overline{g_i}$')
+    ax1.fill_between(t, r_t - std_detrended, r_t + std_detrended, color="orange", alpha=0.3, label=r"$\sigma^2_{gi}$")
     ax1.legend(fontsize=12)
+    ax1.grid(True)
 
-    ax2.plot(t, tleft, label=r'$f(\Delta t)$', color='tab:orange')
+    ax2.plot(t, tleft, label=r'$f_i(\Delta t)$', color='tab:orange')
     ax2.set_xlabel(r'$\Delta t$', fontsize=10)
-    slope2, slope, intercept = np.polyfit(t, tleft, 2)
-    mean = np.mean(tleft)
-    std = np.std(tleft)
-    ax2.plot(t, slope2*t**2 + slope*t + intercept, linestyle='--', color="tab:green", label=r"$r_2(\Delta t)$")
-    ax2.axhline(mean, color='grey', linestyle='--', label=r'$m_2(f)$')
-    ax2.axhline(mean+std, color='tab:grey', linestyle=':', label=r'$s_2(f)$')
-    ax2.axhline(mean-std, color='tab:grey', linestyle=':')
+    slope, intercept = np.polyfit(t, tleft, 1)
+    r_t = slope*t + intercept
+    detrended_g_t = tleft - r_t
+    std_detrended = np.std(detrended_g_t)
+    mean = np.mean(signal)
+    ax2.plot(t, slope*t + intercept, color="tab:green", label=r"$r_1(\Delta t)$")
+    ax2.axhline(mean, color='black', linestyle='--', label=r'$\overline{f_i}$')
+    ax2.fill_between(t, r_t - std_detrended, r_t + std_detrended, color="orange", alpha=0.3, label=r"$\sigma^2_{fi}$")
     ax2.legend(fontsize=12)
+    ax2.grid(True)
 
     plt.tight_layout()
     plt.savefig('pics/figs/reg1.pdf')
@@ -132,16 +155,55 @@ def reg(num, n, start, sig_type):
     #plt.show()
     plt.close()
 
-def linear(num, n, start, sig_type):
+def linear(num, sig_type):
     path_dir = "data/"+num+"/"
     signal, tleft, t = load_data(path_dir, sig_type)
+
+    fig = plt.figure(figsize=(8, 6))
+    plt.plot(t, signal, label='g(t)', color='tab:blue')
+    plt.plot(t, tleft, label='f(t)', color='tab:orange')
+    plt.xlabel('t')
+    plt.legend()
+    plt.tight_layout()
+    plt.grid(True)
+    plt.savefig('pics/figs/linear.pdf')
+    print('saved picture of linear')
+    #plt.show()
+    plt.close()
+
+
+def linear_norm(num, sig_type):
+    path_dir = "data/"+num+"/"
+    signal, tleft, t = load_data(path_dir, sig_type)
+    signal = norm(signal[cutoff:])
+    tleft = tleft[cutoff:]
+    t = t[cutoff:]
+
+    fig = plt.figure(figsize=(8, 6))
+    plt.plot(t, signal, label='g(t)', color='tab:blue')
+    plt.plot(t, tleft, label='f(t)', color='tab:orange')
+    plt.xlabel('t')
+    plt.legend()
+    plt.tight_layout()
+    plt.grid(True)
+    plt.savefig('pics/figs/linear_norm.pdf')
+    print('saved picture of linear_norm')
+    #plt.show()
+    plt.close()
+
+def window(num, n, start, sig_type):
+    path_dir = "data/"+num+"/"
+    signal, tleft, t = load_data(path_dir, sig_type)
+    signal = norm(signal[cutoff:])
+    tleft = tleft[cutoff:]
+    t = t[cutoff:]
 
     fig = plt.figure(figsize=(8, 6))
     gs = gridspec.GridSpec(2, 2, height_ratios=[2, 1], width_ratios=[1, 1])
 
     ax1 = fig.add_subplot(gs[0, :])
     ax1.plot(t, signal, label='g(t)')
-    ax1.plot(t, tleft, label='f(t)', color='tab:orangeorange')
+    ax1.plot(t, tleft, label='f(t)', color='tab:orange')
     ax1.set_xlabel('Čas t(s)', fontsize=10)
     ax1.axvspan(t[start], t[start+n], color='black', alpha=0.1)
     ax1.legend()
@@ -153,27 +215,29 @@ def linear(num, n, start, sig_type):
     ax2.set_title("Napětí na baterii")
 
     ax3 = fig.add_subplot(gs[1, 1])
-    ax3.plot(t[start:start+n], tleft[start:start+n], label='f(t)', color='tab:orangeorange')
+    ax3.plot(t[start:start+n], tleft[start:start+n], label='f(t)', color='tab:orange')
     ax3.set_xlabel('Čas t(s)', fontsize=10)
     ax3.legend()
     ax3.set_title("Jednoduchá linearní čára")
 
     rect1 = Rectangle(
-        (t[1000], ax2.get_ylim()[0]),  # Bottom-left corner
-        t[1000 + n]-t[1000],  # Width
+        (t[start], ax2.get_ylim()[0]),  # Bottom-left corner
+        t[start + n]-t[start],  # Width
         ax2.get_ylim()[1] - ax2.get_ylim()[0],  # Height
         edgecolor='black',
-        facecolor='none',
+        facecolor='grey',
+        alpha=0.5,
         linestyle='--',
         linewidth=1,
         label='Zoomed Region'
     )
     rect2 = Rectangle(
-        (t[1000], ax3.get_ylim()[0]),  # Bottom-left corner
-        t[1000 + n]-t[1000],  # Width
+        (t[start], ax3.get_ylim()[0]),  # Bottom-left corner
+        t[start + n]-t[start],  # Width
         ax3.get_ylim()[1] - ax3.get_ylim()[0],  # Height
         edgecolor='black',
-        facecolor='none',
+        facecolor='grey',
+        alpha=0.5,
         linestyle='--',
         linewidth=1,
         label='Zoomed Region'
@@ -183,7 +247,7 @@ def linear(num, n, start, sig_type):
     arrowprops = dict(arrowstyle="->", color="black", linewidth=1, shrinkA=0, shrinkB=0, linestyle=":")
     ax1.annotate(
         '',
-        xy=(t[1000 + n // 2], signal[1000] - (ax3.get_ylim()[1] - ax3.get_ylim()[0])),
+        xy=(t[start + n // 2], signal[start] - (ax2.get_ylim()[1] - ax2.get_ylim()[0])),
         xytext=(0.5, 0.5),
         textcoords=ax2.transAxes,
         arrowprops=arrowprops,
@@ -191,16 +255,17 @@ def linear(num, n, start, sig_type):
     )
     ax1.annotate(
         '',  # No text, just an arrow
-        xy=(t[1000 + n // 2], tleft[1000] - (ax3.get_ylim()[1] - ax3.get_ylim()[0])),
+        xy=(t[start + n // 2], tleft[start] - (ax3.get_ylim()[1] - ax3.get_ylim()[0])),
         xytext=(0.5, 0.5),
         textcoords=ax3.transAxes,
         arrowprops=arrowprops,
         xycoords='data',
     )
+    ax1.grid(True)
     plt.tight_layout()
-    #plt.savefig("pics/figs/window.pdf")
+    plt.savefig("pics/figs/window.pdf")
     print("saved picture of making window")
-    plt.show()
+    #plt.show()
     plt.close()
 
 
@@ -266,7 +331,7 @@ def gen(num):
     plt.close()
 
     # Show the plot
-    plt.show()
+    #plt.show()
 
 if __name__ == '__main__':
     # gen('23-1-25')
@@ -275,8 +340,11 @@ if __name__ == '__main__':
     # gen('4-2-25')
     # gen('5-2-25')
     # gen('21-2-25')
-    # linear('5-2-25', 300, 1000, 'bat') # n indicate window size, start is starting position of that window, sig_type can be 'bat' or 'motor'
+    # linear('5-2-25', 'bat')
+    # linear_norm('5-2-25', 'bat')
+    # window('5-2-25', 300, 2000, 'bat') # n indicate window size, start is starting position of that window, sig_type can be 'bat' or 'motor'
     # reg('5-2-25', 300, 1000, 'bat')
     # relu()
     # sigmoid()
     # tanh()
+    # experiment_battery_real_time('6-3-25')
