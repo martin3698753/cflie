@@ -36,12 +36,12 @@ def denorm(normalized_data, original_min, original_max):
 if __name__ == '__main__':
     #path_dir = pickdir.choose_directory('data')+'/'
     #path_dir = 'data/26-11-24/'
-    path_dir = 'data/6-3-25/'
+    path_dir = 'data/5-2-25/'
     battery = mt.battery(path_dir)
-    t = np.arange(0,battery.shape[1]*100, 100)*0.1
-    #t = mt.time(path_dir)
-    pred = mt.prediction(path_dir)
-    print(pred.shape, battery.shape)
+    #t = np.arange(0,battery.shape[1]*100, 100)*0.1
+    t = mt.time(path_dir)
+    #pred = mt.prediction(path_dir)
+    #print(pred.shape, battery.shape)
 
 
     motor = mt.readcsv(path_dir+'motor.csv')
@@ -64,11 +64,11 @@ if __name__ == '__main__':
     # plt.plot(t, av[2], label='m2 RPM')
     # plt.plot(t, av[3], label='m3 RPM')
     # plt.plot(t, av[4], label='m4 RPM')
-    # plt.plot(t, me, label='Výkon (W)')
+    plt.plot(t, me, label='Výkon (W)')
     # plt.plot(t, energy, label='battery energy (J)')
     # plt.plot(t, work, label='work (J)')
-    plt.plot(t[:len(pred)], pred)
-    plt.plot(t, norm(battery[1]), label='baterie (V)')
+    #plt.plot(t[:len(pred)], pred)
+    plt.plot(battery[0], battery[1], label='baterie (V)')
     # plt.plot(t, mt.sum_ar(me), label='Energie (J)')
     #plt.plot(t, mech_pred, label='61*t-92')
     #plt.scatter(t, pred, s=.5, label='prediction')

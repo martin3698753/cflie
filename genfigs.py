@@ -334,12 +334,12 @@ def gen(num):
     #plt.show()
 
 if __name__ == '__main__':
-    # gen('23-1-25')
-    # gen('24-1-25')
-    # gen('31-1-25')
-    # gen('4-2-25')
-    # gen('5-2-25')
-    # gen('21-2-25')
+    gen('23-1-25')
+    gen('24-1-25')
+    gen('31-1-25')
+    gen('4-2-25')
+    gen('5-2-25')
+    gen('21-2-25')
     # linear('5-2-25', 'bat')
     # linear_norm('5-2-25', 'bat')
     # window('5-2-25', 300, 2000, 'bat') # n indicate window size, start is starting position of that window, sig_type can be 'bat' or 'motor'
