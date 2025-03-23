@@ -13,6 +13,7 @@ import pickdir
 import maketab as mt
 
 cutoff = 50
+sec_norm = 410
 
 def norm(signal):
     norm_lower = 2
@@ -27,6 +28,7 @@ def load_data(path_dir, sig_type):
         t, signal = mt.battery(path_dir)
         t = t/1000
         tleft = 1 - t / max(t)
+        tleft = tleft*(t[-1]/sec_norm)
         return signal, tleft, t
     elif sig_type == "motor":
         t = mt.time(path_dir)
@@ -160,15 +162,15 @@ def linear(num, sig_type):
     signal, tleft, t = load_data(path_dir, sig_type)
 
     fig = plt.figure(figsize=(8, 6))
-    plt.plot(t, signal, label='g(t)', color='tab:blue')
-    plt.plot(t, tleft, label='f(t)', color='tab:orange')
+    plt.plot(t, signal, label=r"$g(t)'$", color='tab:blue')
+    plt.plot(t, tleft, label=r"$f(t)$", color='tab:orange')
     plt.xlabel('t')
-    plt.legend()
+    plt.legend(fontsize=12)
     plt.tight_layout()
     plt.grid(True)
-    plt.savefig('pics/figs/linear.pdf')
+    #plt.savefig('pics/figs/linear.pdf')
     print('saved picture of linear')
-    #plt.show()
+    plt.show()
     plt.close()
 
 
@@ -334,13 +336,13 @@ def gen(num):
     #plt.show()
 
 if __name__ == '__main__':
-    gen('23-1-25')
-    gen('24-1-25')
-    gen('31-1-25')
-    gen('4-2-25')
-    gen('5-2-25')
-    gen('21-2-25')
-    # linear('5-2-25', 'bat')
+    # gen('23-1-25')
+    # gen('24-1-25')
+    # gen('31-1-25')
+    # gen('4-2-25')
+    # gen('5-2-25')
+    # gen('21-2-25')
+    linear('31-1-25', 'bat')
     # linear_norm('5-2-25', 'bat')
     # window('5-2-25', 300, 2000, 'bat') # n indicate window size, start is starting position of that window, sig_type can be 'bat' or 'motor'
     # reg('5-2-25', 300, 1000, 'bat')

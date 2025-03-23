@@ -10,8 +10,8 @@ def load_data(path_dir):
 
 model = BatSeqModel()
 
-signal, tleft, t = load_data('data/21-2-25/')
-for i in signal:
+signal, _, _ = load_data('data/31-1-25/')
+for i in signal[1000:]:
     model.pred(i)
 
 model.done()

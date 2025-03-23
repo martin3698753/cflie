@@ -18,7 +18,7 @@ class MLP(nn.Module):
         return out
 
 class BatSeqModel:
-    def __init__(self, checkpoint_path='bat_seq_model.pth'):
+    def __init__(self, checkpoint_path='bat_seq_model2.pth'):
         self.checkpoint = torch.load(checkpoint_path)
         self.input_size = self.checkpoint['input_size']
         self.hidden_size = self.checkpoint['hidden_size']
