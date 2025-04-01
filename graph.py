@@ -68,7 +68,7 @@ if __name__ == '__main__':
     # plt.plot(t, energy, label='battery energy (J)')
     # plt.plot(t, work, label='work (J)')
     #plt.plot(t[:len(pred)], pred)
-    plt.plot(battery[0], battery[1], label='baterie (V)')
+    plt.plot(t, battery[1], label='baterie (V)')
     # plt.plot(t, mt.sum_ar(me), label='Energie (J)')
     #plt.plot(t, mech_pred, label='61*t-92')
     #plt.scatter(t, pred, s=.5, label='prediction')

@@ -5,6 +5,7 @@ import math
 import os
 import glob
 import pandas as pd
+import fixdata as fd
 
 g = 9.81
 TIME_INTERVAL = 0.1
@@ -61,8 +62,9 @@ def pos3d(filename):
     # plt.show()
 
 def readcsv(filename):
-    df = pd.read_csv(filename)
-    df = df.iloc[:, :-1] #deleting last column cause was empty and also deleting time column
+    #df = pd.read_csv(filename)
+    #df = df.iloc[:, :-1] #deleting last column cause was empty and also deleting time column
+    df = fd.readcsv(filename)
     colar = [df[col].values for col in df.columns]
     colar = np.array(colar)
 
@@ -142,11 +144,12 @@ def ang_vel(dirname):
     return (av)
 
 def power(dirname):
-    mass = 0.05
-    az = acceleration(dirname)
-    F = mass*az
-    w = ang_vel(dirname)*2*np.pi/60
-    return(F*w)
+    motor = readcsv(dirname+'motor.csv')
+    motor = (motor/65535)*100
+    thr = thrust(dirname)
+    av = ang_vel(dirname)
+    me = ((thr[1]/4)*av[1] + (thr[2]/4)*av[2] + (thr[3]/4)*av[3] + (thr[4]/4)*av[4])*0.047*0.1*0.05
+    return np.array(me)
 
 def energy(dirname):
     posx, posy, posz = position(dirname)
