@@ -14,6 +14,13 @@ import maketab as mt
 
 cutoff = 50
 sec_norm = 410
+p_size=3
+
+def norm_motor(signal):
+    norm_lower = 4
+    norm_upper = 8
+    signal = (signal - norm_lower) / (norm_upper - norm_lower)
+    return signal
 
 def norm(signal):
     norm_lower = 2
@@ -22,6 +29,92 @@ def norm(signal):
     return signal
 
 plt.rcParams['mathtext.fontset'] = 'cm'  # Use Computer Modern font for math text
+
+def h_seq_norm(num):
+    path_dir = "data/"+num+"/"
+    me, tleft, t = load_data(path_dir, 'motor')
+    me = norm_motor(me[cutoff:])
+    t = t[cutoff:]
+
+    fig = plt.figure(figsize=(8, 6))
+    plt.scatter(t, me, s=p_size, label=r"$\tilde{h_t}$")
+    plt.xlabel('t(s)', fontsize=12)
+    plt.ylabel(r"$\tilde{h_t}$", fontsize=12)
+    plt.legend(fontsize=16)
+    plt.tight_layout()
+    plt.grid(True)
+    plt.savefig('pics/figs/h_seq_norm.pdf')
+    print('saved picture of h_seq_norm')
+    #plt.show()
+    plt.close()
+
+def f_seq_norm(num):
+    path_dir = "data/"+num+"/"
+    _, tleft, t = load_data(path_dir, 'bat')
+
+    fig = plt.figure(figsize=(8, 6))
+    plt.scatter(t, tleft, s=p_size, label=r"$\tilde{f_t}$")
+    plt.xlabel('t(s)', fontsize=12)
+    plt.ylabel(r"$\tilde{f_t}$", fontsize=12)
+    plt.legend(fontsize=16)
+    plt.tight_layout()
+    plt.grid(True)
+    plt.savefig('pics/figs/f_seq_norm.pdf')
+    print('saved picture of f_seq_norm')
+    #plt.show()
+    plt.close()
+
+def f_seq(num):
+    path_dir = "data/"+num+"/"
+    t, _ = mt.battery(path_dir)
+    t = t/1000
+    tleft = max(t) - t
+
+    fig = plt.figure(figsize=(8, 6))
+    plt.scatter(t, tleft, s=p_size, label=r"$f_t$")
+    plt.xlabel('t(s)', fontsize=12)
+    plt.ylabel(r"$f_t$", fontsize=12)
+    plt.legend(fontsize=16)
+    plt.tight_layout()
+    plt.grid(True)
+    plt.savefig('pics/figs/f_seq.pdf')
+    print('saved picture of f_seq')
+    plt.close()
+
+def g_seq(num):
+    path_dir = "data/"+num+"/"
+    signal, tleft, t = load_data(path_dir, 'bat')
+
+    fig = plt.figure(figsize=(8, 6))
+    plt.scatter(t, signal, label=r'$g_t$', s=p_size, color='tab:blue')
+    plt.xlabel('t(s)', fontsize=12)
+    plt.ylabel(r'$g_t$', fontsize=12)
+    plt.legend(fontsize=16)
+    plt.tight_layout()
+    plt.grid(True)
+    plt.savefig('pics/figs/g_seq.pdf')
+    print('saved picture of q_seq')
+    #plt.show()
+    plt.close()
+
+def g_seq_norm(num):
+    path_dir = "data/"+num+"/"
+    signal, tleft, t = load_data(path_dir, 'bat')
+    signal = norm(signal[cutoff:])
+    tleft = tleft[cutoff:]
+    t = t[cutoff:]
+
+    fig = plt.figure(figsize=(8, 6))
+    plt.scatter(t, signal, s=p_size, label=r'$\tilde{g_t}$', color='tab:blue')
+    plt.xlabel('t(s)', fontsize=12)
+    plt.ylabel(r'$\tilde{g_t}$', fontsize=12)
+    plt.legend(fontsize=16)
+    plt.tight_layout()
+    plt.grid(True)
+    plt.savefig('pics/figs/g_seq_norm.pdf')
+    print('saved picture of q_seq_norm')
+    #plt.show()
+    plt.close()
 
 def load_data(path_dir, sig_type):
     if sig_type == "bat":
@@ -157,6 +250,7 @@ def reg(num, n, start, sig_type):
     #plt.show()
     plt.close()
 
+
 def linear(num, sig_type):
     path_dir = "data/"+num+"/"
     signal, tleft, t = load_data(path_dir, sig_type)
@@ -194,6 +288,7 @@ def linear_norm(num, sig_type):
     plt.close()
 
 def window(num, n, start, sig_type):
+    #plt.scatter(t, me, s=p_size, label=r"$\tilde{h_t}$")
     path_dir = "data/"+num+"/"
     signal, tleft, t = load_data(path_dir, sig_type)
     signal = norm(signal[cutoff:])
@@ -204,23 +299,23 @@ def window(num, n, start, sig_type):
     gs = gridspec.GridSpec(2, 2, height_ratios=[2, 1], width_ratios=[1, 1])
 
     ax1 = fig.add_subplot(gs[0, :])
-    ax1.plot(t, signal, label='g(t)')
-    ax1.plot(t, tleft, label='f(t)', color='tab:orange')
-    ax1.set_xlabel('Čas t(s)', fontsize=10)
-    ax1.axvspan(t[start], t[start+n], color='black', alpha=0.1)
-    ax1.legend()
+    ax1.scatter(t, signal, s=p_size, label=r"$\tilde{g_t}$")
+    ax1.scatter(t, tleft, s=p_size/2, label=r"$\tilde{f_t}$", color='tab:orange')
+    ax1.set_xlabel('Čas t(s)', fontsize=12)
+    ax1.axvspan(t[start], t[start+n], color='black', alpha=0.2)
+    ax1.legend(fontsize=16)
 
     ax2 = fig.add_subplot(gs[1, 0])
-    ax2.plot(t[start:start+n], signal[start:start+n], label='g(t)')
-    ax2.set_xlabel('Čas t(s)', fontsize=10)
-    ax2.legend()
+    ax2.plot(t[start:start+n], signal[start:start+n], '-o', ms=p_size, label=r"$\tilde{g_t}$")
+    ax2.set_xlabel('Čas t(s)', fontsize=12)
+    ax2.legend(fontsize=12)
     ax2.set_title("Napětí na baterii")
 
     ax3 = fig.add_subplot(gs[1, 1])
-    ax3.plot(t[start:start+n], tleft[start:start+n], label='f(t)', color='tab:orange')
-    ax3.set_xlabel('Čas t(s)', fontsize=10)
-    ax3.legend()
-    ax3.set_title("Jednoduchá linearní čára")
+    ax3.scatter(t[start:start+n], tleft[start:start+n], s=p_size/2, label=r"$\tilde{f_t}$", color='tab:orange')
+    ax3.set_xlabel('Čas t(s)', fontsize=12)
+    ax3.legend(fontsize=14)
+    ax3.set_title("Kapacita baterie")
 
     rect1 = Rectangle(
         (t[start], ax2.get_ylim()[0]),  # Bottom-left corner
@@ -342,9 +437,14 @@ if __name__ == '__main__':
     # gen('4-2-25')
     # gen('5-2-25')
     # gen('21-2-25')
-    linear('31-1-25', 'bat')
+    #linear('31-1-25', 'bat')
+    f_seq('31-1-25')
+    f_seq_norm('31-1-25')
+    g_seq('31-1-25')
+    g_seq_norm('31-1-25')
+    h_seq_norm('31-1-25')
     # linear_norm('5-2-25', 'bat')
-    # window('5-2-25', 300, 2000, 'bat') # n indicate window size, start is starting position of that window, sig_type can be 'bat' or 'motor'
+    window('5-2-25', 300, 2000, 'bat') # n indicate window size, start is starting position of that window, sig_type can be 'bat' or 'motor'
     # reg('5-2-25', 300, 1000, 'bat')
     # relu()
     # sigmoid()
