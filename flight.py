@@ -18,7 +18,7 @@ from cflib.utils import power_switch
 URI = uri_helper.uri_from_env(default='radio://0/80/2M/E7E7E7E7E7')
 psw = power_switch.PowerSwitch(URI)
 
-DEFAULT_HEIGHT = 0.4
+DEFAULT_HEIGHT = 0.6
 INTERVAL = 100 #ms
 
 # Only output errors from the logging framework
@@ -70,7 +70,7 @@ def move_prep(scf):
 def flight(scf):
     height = DEFAULT_HEIGHT
     while not (read.stop(joystick)):
-        c = 1.5
+        c = 2
         height += read.up_down(joystick)
         x, y, z = read.read(joystick)
         scf.cf.commander.send_hover_setpoint(y*c, x*c, z*180, height) #Why I didn't use hover instead?
