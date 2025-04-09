@@ -81,6 +81,14 @@ def prediction(dirname):
     colar = colar.T[0]
     return colar
 
+def position_graph(dirname):
+    colar = readcsv(dirname+'position.csv')
+    t = colar[0]
+    x = colar[1]
+    y = colar[2]
+    z = colar[3]
+    return x, y, z
+
 def position(dirname):
     colar = readcsv(dirname+'position.csv')
     t = colar[0]
@@ -145,10 +153,11 @@ def ang_vel(dirname):
 
 def power(dirname):
     motor = readcsv(dirname+'motor.csv')
-    motor = (motor/65535)*100
-    thr = thrust(dirname)
-    av = ang_vel(dirname)
-    me = ((thr[1]/4)*av[1] + (thr[2]/4)*av[2] + (thr[3]/4)*av[3] + (thr[4]/4)*av[4])*0.047*0.1*0.05
+    motor = (motor/65535)
+    #thr = thrust(dirname)
+    #av = ang_vel(dirname)
+    #me = ((thr[1]/4)*av[1] + (thr[2]/4)*av[2] + (thr[3]/4)*av[3] + (thr[4]/4)*av[4])*0.047*0.1*0.05
+    me = (motor[1] + motor[2] + motor[3] + motor[4])/4
     return np.array(me)
 
 def energy(dirname):

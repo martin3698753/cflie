@@ -365,6 +365,62 @@ def window(num, n, start, sig_type):
     #plt.show()
     plt.close()
 
+def motor_graph(num):
+    path_dir = "data/"+num+"/"
+    motor = mt.readcsv(path_dir+'motor.csv')
+    motor = (motor/65535)
+    t = mt.time(path_dir)
+    t = t/1000
+    power = mt.power(path_dir)
+
+    fig = plt.figure(figsize=(8, 4))
+    plt.plot(t, motor[1], label=r"Motor $m_1$(PWM)")
+    plt.plot(t, motor[2], label=r"Motor $m_2$(PWM)")
+    plt.plot(t, motor[3], label=r"Motor $m_3$(PWM)")
+    plt.plot(t, motor[4], label=r"Motor $m_4$(PWM)")
+    plt.xlabel('čas t(s)', fontsize=12)
+    plt.ylabel(r'Signály z motorů (PWM)', fontsize=12)
+    plt.legend(fontsize=12, loc='upper right')
+    plt.grid(True)
+    plt.tight_layout()
+    print(f"saving figure motors {num}")
+    plt.savefig("pics/figs/"+num+"_motors.pdf")
+    #plt.show()
+    plt.close()
+
+    fig = plt.figure(figsize=(8, 4))
+    plt.plot(t, power, label="Průměr M (PWM)")
+    plt.xlabel('čas t(s)', fontsize=12)
+    plt.ylabel('Průměr motorů M (PWM)', fontsize=12)
+    plt.legend(fontsize=12, loc='upper right')
+    plt.grid(True)
+    plt.tight_layout()
+    print(f"saving figure motors average {num}")
+    plt.savefig("pics/figs/"+num+"_motors_avg.pdf")
+    #plt.show()
+    plt.close
+
+def pos(num):
+    path_dir = "data/"+num+"/"
+    x, y, z = mt.position_graph(path_dir)
+    t = mt.time(path_dir)
+    t = t/1000
+
+    fig = plt.figure(figsize=(8, 3))
+    plt.plot(t, x, label="Osa x", color="purple")
+    plt.plot(t, y, label="Osa y", color="blue")
+    plt.plot(t, z, label="Osa z", color="red")
+    plt.xlabel('čas t(s)', fontsize=12)
+    plt.ylabel('Vzdálenost od počátku (m)', fontsize=12)
+    plt.legend(fontsize=12, loc='upper right')
+    plt.grid(True)
+    plt.tight_layout()
+
+    #save
+    print(f"saving figure position {num}")
+    plt.savefig("pics/figs/"+num+"_pos.pdf")
+    #plt.show()
+    plt.close()
 
 def gen(num):
     path_dir = "data/"+num+"/"
@@ -388,9 +444,9 @@ def gen(num):
 
     fig, (ax1, ax2) = plt.subplots(nrows=2, ncols=1, figsize=(8, 6))
 
-    ax1.plot(t, me, label='Výkon motorů (W)')
+    ax1.plot(t, me, label='Průměr motorů (PWM)')
     ax1.set_xlabel('čas t(s)', fontsize=12)
-    ax1.set_ylabel('Výkon (W)', fontsize=12)
+    ax1.set_ylabel('Průměr motorů (PWM)', fontsize=12)
     ax1.legend(loc='upper right')
     ax1.grid(True)
 
@@ -425,26 +481,29 @@ def gen(num):
     #save
     print(f"saving figure {num}")
     plt.savefig("pics/figs/"+num+".pdf")
+    #plt.show()
     plt.close()
 
-    # Show the plot
-    #plt.show()
+    if(dist != 0):
+        pos(num)
 
 if __name__ == '__main__':
     # gen('23-1-25')
     # gen('24-1-25')
     # gen('31-1-25')
     # gen('4-2-25')
-    # gen('5-2-25')
+    gen('5-2-25')
+    # motor_graph('5-2-25')
     # gen('21-2-25')
+    # gen('8-4-25')
     #linear('31-1-25', 'bat')
-    f_seq('31-1-25')
-    f_seq_norm('31-1-25')
-    g_seq('31-1-25')
-    g_seq_norm('31-1-25')
-    h_seq_norm('31-1-25')
+    # f_seq('31-1-25')
+    # f_seq_norm('31-1-25')
+    # g_seq('31-1-25')
+    # g_seq_norm('31-1-25')
+    # h_seq_norm('31-1-25')
     # linear_norm('5-2-25', 'bat')
-    window('5-2-25', 300, 2000, 'bat') # n indicate window size, start is starting position of that window, sig_type can be 'bat' or 'motor'
+    # window('5-2-25', 300, 2000, 'bat') # n indicate window size, start is starting position of that window, sig_type can be 'bat' or 'motor'
     # reg('5-2-25', 300, 1000, 'bat')
     # relu()
     # sigmoid()
