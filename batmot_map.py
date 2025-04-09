@@ -12,7 +12,7 @@ import gc
 
 sec_norm = 410
 cutoff = 50 #cutting of time it takes to lift off
-train_dir = (['data/31-1-25/', 'data/4-2-25/', 'data/5-2-25/'])
+train_dir = (['data/31-1-25/'])
 test_dir = (['data/21-2-25/'])
 sig_norm = [3.7, 2.3]
 
@@ -22,13 +22,15 @@ def norm(signal, norm):
 
 def load_data(path_dir):
     t, signal = mt.battery(path_dir)
+    me = mt.power(path_dir)
     secleft = t[-1]/1000
     tleft = 1 - t / max(t)
     tleft = tleft*(secleft/sec_norm)
     signal = norm(signal[cutoff:], sig_norm)
     tleft = tleft[cutoff:]
     t = t[cutoff:]
-    normalized_train = np.array([signal, tleft])
+    me = me[cutoff:]
+    normalized_train = np.array([signal, me, tleft])
     return normalized_train
 
 def make_data(train_dir):
@@ -54,7 +56,8 @@ def make_data(train_dir):
 class FunctionDataset(Dataset):
     def __init__(self, data, n):
         self.g = data[0]  # Function g
-        self.f = data[1]  # Function f
+        self.h = data[1]
+        self.f = data[2]  # Function f
         self.n = n  # Sequence length
         self.total_length = len(self.g)
 
@@ -66,12 +69,15 @@ class FunctionDataset(Dataset):
         # Get a sequence of g and the corresponding sequence of f
         g_seq = self.g[idx:idx + self.n]
         f_seq = self.f[idx:idx + self.n]
+        h_seq = self.h[idx:idx + self.n]
 
         # Convert to PyTorch tensors
         g_tensor = torch.tensor(g_seq, dtype=torch.float32)
+        h_tensor = torch.tensor(h_seq, dtype=torch.float32)
         f_tensor = torch.tensor(f_seq, dtype=torch.float32)
+        in_tensor = torch.cat((g_tensor, h_tensor))
 
-        return g_tensor, f_tensor
+        return in_tensor, f_tensor
 
 def create_dataloader(data, seq_length, batch_size=1, shuffle=False):
     dataset = FunctionDataset(data, seq_length)
@@ -88,7 +94,7 @@ class MLP(nn.Module):
 
     def forward(self, x):
         out = self.fc1(x)
-        #out = self.relu(out)
+        out = self.relu(out)
         out = self.fc2(out)
         return out
 
@@ -118,16 +124,21 @@ def train(num_epochs, dataloader, model, criterion, optimizer):
 def evaluate_and_plot(data, model, n, name):
     model.eval()  # Set the model to evaluation mode
 
-    g = data[0]  # Input function g
-    f = data[1]  # True function f
+    g = data[0]
+    h = data[1]
+    f = data[2]
 
     predictions = []
 
     with torch.no_grad():  # Disable gradient computation
         for i in range(0, len(g)-n, n):
-            input_seq = g[i:i+n]
+            g_seq = g[i:i+n]
+            h_seq = h[i:i+n]
+            g_tensor = torch.tensor(g_seq, dtype=torch.float32)
+            h_tensor = torch.tensor(h_seq, dtype=torch.float32)
+            X = torch.cat((g_tensor, h_tensor)).unsqueeze(0)
             # Convert to PyTorch tensor and add batch dimension
-            X = torch.tensor(input_seq, dtype=torch.float32).unsqueeze(0)
+            #X = torch.tensor(input_seq, dtype=torch.float32).unsqueeze(0)
             y = model(X)
             predictions.extend(y.squeeze(0).numpy())  # Remove batch dimension and convert to numpy
 
@@ -136,6 +147,7 @@ def evaluate_and_plot(data, model, n, name):
     plt.figure(figsize=(10, 6))
     plt.plot(g, label=r'$g_t$')
     plt.plot(f, label=r'${f_t}$')
+    plt.plot(h, label=r'${h_t}$')
     plt.plot(predictions, label=r'$y_t$')
 
     mse = mean_squared_error(f[:len(predictions)], predictions)
@@ -159,8 +171,8 @@ def evaluate_and_plot(data, model, n, name):
     plt.xlabel('t(ms)')
     plt.legend(fontsize=16)
     plt.grid(True)
-    #plt.show()
-    plt.savefig('bat_pics/'+name+'.pdf')
+    plt.show()
+    #plt.savefig('bat_pics/'+name+'.pdf')
     plt.close()
     return mse, r2
 
@@ -174,7 +186,7 @@ def test_model(n, k, num_epochs, batch_size, learning_rate):
     # batch_size = 16
     # learning_rate = 0.001
 
-    model = MLP(n, k, n)
+    model = MLP(2*n, k, n)
     criterion = nn.MSELoss()
     optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
 

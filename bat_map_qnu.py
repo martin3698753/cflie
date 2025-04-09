@@ -12,7 +12,7 @@ plt.rcParams['mathtext.fontset'] = 'cm'
 
 sec_norm = 410
 cutoff = 50 #cutting of time it takes to lift off
-train_dir = (['data/5-2-25/'])
+train_dir = (['data/31-1-25/', 'data/4-2-25/', 'data/5-2-25/', 'data/24-1-25/'])
 test_dir = (['data/31-1-25/'])
 sig_norm = [3.7, 2.3]
 
@@ -40,8 +40,9 @@ def make_data(train_dir):
         #plt.show()
         return train_data
     else:
-        train_data = np.empty((len(train_dir), 0))
-        for d in train_dir:
+        #train_data = np.empty((len(train_dir), 0))
+        train_data = load_data(train_dir[0])
+        for d in train_dir[1:]:
             single_data = load_data(d)
             train_data = np.concatenate((train_data, single_data), axis=1)
         #plt.plot(train_data[0])
@@ -117,8 +118,8 @@ class QNU(nn.Module):
 
         out = linear_term + quad_term
 
-        print("Linear term mean:", linear_term.mean().item())
-        print("Quadratic term mean:", quad_term.mean().item())
+        #print("Linear term mean:", linear_term.mean().item())
+        #print("Quadratic term mean:", quad_term.mean().item())
 
         if self.use_bias:
             out = out + self.bias
@@ -243,7 +244,7 @@ def test_model(n, k, num_epochs, batch_size, learning_rate):
 if __name__ == "__main__":
     rows = []
     columns = ['n', 'k', 'num_epochs', 'batch_size', 'lr', 'train_mse', 'train_r2', 'test_mse', 'test_r2']
-    rows.append(test_model(30, 1, 50, 16, 0.001))
+    rows.append(test_model(10, 1, 50, 16, 0.001))
 
     df = pd.DataFrame(rows, columns=columns)
     print(df)
