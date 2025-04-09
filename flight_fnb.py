@@ -30,10 +30,10 @@ def move(scf):
         time.sleep(1)
         while True:
             try:
-                mc.forward(1.5, velocity=0.5)
-                time.sleep(0.5)
-                mc.back(1.5, velocity=0.5)
-                time.sleep(0.5)
+                mc.forward(2, velocity=1)
+                time.sleep(0.3)
+                mc.back(2, velocity=1)
+                time.sleep(0.3)
             except KeyboardInterrupt:
                 psw.platform_power_down()
 
