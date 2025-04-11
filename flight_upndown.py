@@ -30,10 +30,10 @@ def move(scf):
         time.sleep(1)
         while True:
             try:
-                mc.up(0.5, velocity=0.4)
-                time.sleep(0.1)
-                mc.down(0.5, velocity=0.4)
-                time.sleep(0.1)
+                mc.up(0.3, velocity=0.2)
+                time.sleep(0.5)
+                mc.down(0.3, velocity=0.2)
+                time.sleep(0.5)
             except KeyboardInterrupt:
                 psw.platform_power_down()
 
@@ -76,19 +76,9 @@ if __name__ == '__main__':
         scf.cf.param.add_update_callback(group='deck', name='bcFlow2', cb=param_deck_flow)
         time.sleep(1)
 
-
-        acconf = LogConfig(name='acceleration', period_in_ms=INTERVAL)
-        #acconf.add_variable('acc.x', 'float')
-        #acconf.add_variable('acc.y', 'float')
-        acconf.add_variable('acc.z', 'float')
-        scf.cf.log.add_config(acconf)
-        acconf.data_received_cb.add_callback(acc_callback)
-
-
-
         posconf = LogConfig(name='position', period_in_ms=INTERVAL)
-        # posconf.add_variable('stateEstimate.x', 'float')
-        # posconf.add_variable('stateEstimate.y', 'float')
+        posconf.add_variable('stateEstimate.x', 'float')
+        posconf.add_variable('stateEstimate.y', 'float')
         posconf.add_variable('stateEstimate.z', 'float')
         scf.cf.log.add_config(posconf)
         posconf.data_received_cb.add_callback(acc_callback)
@@ -103,7 +93,6 @@ if __name__ == '__main__':
 
         batconf = LogConfig(name='battery', period_in_ms=INTERVAL)
         batconf.add_variable('pm.vbat', 'float')
-        #batconf.add_variable('asc37800.p', 'float')
         scf.cf.log.add_config(batconf)
         batconf.data_received_cb.add_callback(acc_callback)
 
@@ -111,12 +100,10 @@ if __name__ == '__main__':
             print('No flow deck detected!')
             sys.exit(1)
 
-        acconf.start()
         logconf.start()
         batconf.start()
         posconf.start()
         move(scf)
-        acconf.stop()
         logconf.stop()
         batconf.stop()
         posconf.stop()
