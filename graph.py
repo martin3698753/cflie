@@ -36,21 +36,25 @@ def denorm(normalized_data, original_min, original_max):
 if __name__ == '__main__':
     #path_dir = pickdir.choose_directory('data')+'/'
     #path_dir = 'data/26-11-24/'
-    path_dir = 'data/5-2-25/'
+    path_dir = 'data/9-4-25/'
     battery = mt.battery(path_dir)
     #t = np.arange(0,battery.shape[1]*100, 100)*0.1
     t = mt.time(path_dir)
+    me = mt.power(path_dir)
+    en = mt.sum_ar(me)
+    print(en[-1])
+    en = en/2600
     #pred = mt.prediction(path_dir)
     #print(pred.shape, battery.shape)
 
 
-    motor = mt.readcsv(path_dir+'motor.csv')
-    motor = motor = (motor/65535)*100
-    thr = mt.thrust(path_dir)
-    av = mt.ang_vel(path_dir)
-    #me = thr*0.05*av*0.1
-    me = ((thr[1]/4)*av[1] + (thr[2]/4)*av[2] + (thr[3]/4)*av[3] + (thr[4]/4)*av[4])*0.047*0.1*0.05
-    mech = np.sum(me)
+    # motor = mt.readcsv(path_dir+'motor.csv')
+    # motor = motor = (motor/65535)*100
+    # thr = mt.thrust(path_dir)
+    # av = mt.ang_vel(path_dir)
+    # #me = thr*0.05*av*0.1
+    # me = ((thr[1]/4)*av[1] + (thr[2]/4)*av[2] + (thr[3]/4)*av[3] + (thr[4]/4)*av[4])*0.047*0.1*0.05
+    # mech = np.sum(me)
 
     x, y, z = mt.position_graph(path_dir)
 
@@ -61,19 +65,20 @@ if __name__ == '__main__':
     # x, y = window(power, battery)
     # neuron.train_lin(x, y)
     # pred = neuron.predict_lin(power)
-    plt.figure(figsize=(8, 6))
-    plt.plot(t, x)
-    plt.plot(t, y)
-    plt.plot(t, z)
+    # plt.figure(figsize=(8, 6))
+    # plt.plot(t, x)
+    # plt.plot(t, y)
+    # plt.plot(t, z)
     # plt.plot(t, av[1], label='m1 RPM')
     # plt.plot(t, av[2], label='m2 RPM')
     # plt.plot(t, av[3], label='m3 RPM')
     # plt.plot(t, av[4], label='m4 RPM')
-    #plt.plot(t, me, label='Výkon (W)')
+    plt.plot(t, me, label='Výkon (W)')
+    plt.plot(t, en)
     # plt.plot(t, energy, label='battery energy (J)')
     # plt.plot(t, work, label='work (J)')
     #plt.plot(t[:len(pred)], pred)
-    #plt.plot(t, battery[1], label='baterie (V)')
+    plt.plot(t, battery[1], label='baterie (V)')
     # plt.plot(t, mt.sum_ar(me), label='Energie (J)')
     #plt.plot(t, mech_pred, label='61*t-92')
     #plt.scatter(t, pred, s=.5, label='prediction')

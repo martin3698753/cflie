@@ -15,11 +15,10 @@ import maketab as mt
 cutoff = 50
 sec_norm = 410
 p_size=3
+#PATH = 'pics/figs/'
+PATH = '/home/martin/bak/bak(4)/figs/'
 
 def norm_motor(signal):
-    norm_lower = 4
-    norm_upper = 8
-    signal = (signal - norm_lower) / (norm_upper - norm_lower)
     return signal
 
 def norm(signal):
@@ -29,92 +28,6 @@ def norm(signal):
     return signal
 
 plt.rcParams['mathtext.fontset'] = 'cm'  # Use Computer Modern font for math text
-
-def h_seq_norm(num):
-    path_dir = "data/"+num+"/"
-    me, tleft, t = load_data(path_dir, 'motor')
-    me = norm_motor(me[cutoff:])
-    t = t[cutoff:]
-
-    fig = plt.figure(figsize=(8, 6))
-    plt.scatter(t, me, s=p_size, label=r"$\tilde{h_t}$")
-    plt.xlabel('t(s)', fontsize=12)
-    plt.ylabel(r"$\tilde{h_t}$", fontsize=12)
-    plt.legend(fontsize=16)
-    plt.tight_layout()
-    plt.grid(True)
-    plt.savefig('pics/figs/h_seq_norm.pdf')
-    print('saved picture of h_seq_norm')
-    #plt.show()
-    plt.close()
-
-def f_seq_norm(num):
-    path_dir = "data/"+num+"/"
-    _, tleft, t = load_data(path_dir, 'bat')
-
-    fig = plt.figure(figsize=(8, 6))
-    plt.scatter(t, tleft, s=p_size, label=r"$\tilde{f_t}$")
-    plt.xlabel('t(s)', fontsize=12)
-    plt.ylabel(r"$\tilde{f_t}$", fontsize=12)
-    plt.legend(fontsize=16)
-    plt.tight_layout()
-    plt.grid(True)
-    plt.savefig('pics/figs/f_seq_norm.pdf')
-    print('saved picture of f_seq_norm')
-    #plt.show()
-    plt.close()
-
-def f_seq(num):
-    path_dir = "data/"+num+"/"
-    t, _ = mt.battery(path_dir)
-    t = t/1000
-    tleft = max(t) - t
-
-    fig = plt.figure(figsize=(8, 6))
-    plt.scatter(t, tleft, s=p_size, label=r"$f_t$")
-    plt.xlabel('t(s)', fontsize=12)
-    plt.ylabel(r"$f_t$", fontsize=12)
-    plt.legend(fontsize=16)
-    plt.tight_layout()
-    plt.grid(True)
-    plt.savefig('pics/figs/f_seq.pdf')
-    print('saved picture of f_seq')
-    plt.close()
-
-def g_seq(num):
-    path_dir = "data/"+num+"/"
-    signal, tleft, t = load_data(path_dir, 'bat')
-
-    fig = plt.figure(figsize=(8, 6))
-    plt.scatter(t, signal, label=r'$g_t$', s=p_size, color='tab:blue')
-    plt.xlabel('t(s)', fontsize=12)
-    plt.ylabel(r'$g_t$', fontsize=12)
-    plt.legend(fontsize=16)
-    plt.tight_layout()
-    plt.grid(True)
-    plt.savefig('pics/figs/g_seq.pdf')
-    print('saved picture of q_seq')
-    #plt.show()
-    plt.close()
-
-def g_seq_norm(num):
-    path_dir = "data/"+num+"/"
-    signal, tleft, t = load_data(path_dir, 'bat')
-    signal = norm(signal[cutoff:])
-    tleft = tleft[cutoff:]
-    t = t[cutoff:]
-
-    fig = plt.figure(figsize=(8, 6))
-    plt.scatter(t, signal, s=p_size, label=r'$\tilde{g_t}$', color='tab:blue')
-    plt.xlabel('t(s)', fontsize=12)
-    plt.ylabel(r'$\tilde{g_t}$', fontsize=12)
-    plt.legend(fontsize=16)
-    plt.tight_layout()
-    plt.grid(True)
-    plt.savefig('pics/figs/g_seq_norm.pdf')
-    print('saved picture of q_seq_norm')
-    #plt.show()
-    plt.close()
 
 def load_data(path_dir, sig_type):
     if sig_type == "bat":
@@ -127,15 +40,97 @@ def load_data(path_dir, sig_type):
         t = mt.time(path_dir)
         t = t/1000
         tleft = 1 - t / max(t)
-        motor = mt.readcsv(path_dir+'motor.csv')
-        motor = (motor/65535)*100
-        thr = mt.thrust(path_dir)
-        av = mt.ang_vel(path_dir)
-        me = ((thr[1]/4)*av[1] + (thr[2]/4)*av[2] + (thr[3]/4)*av[3] + (thr[4]/4)*av[4])*0.047*0.1*0.05
+        me = mt.power(path_dir)
         return me, tleft, t
     else:
         print("Undefined sig_type")
         sys.exit(1)
+
+def h_seq_norm(num):
+    path_dir = "data/"+num+"/"
+    me, tleft, t = load_data(path_dir, 'motor')
+    me = me[cutoff:]
+    t = t[cutoff:]
+
+    fig = plt.figure(figsize=(8, 6))
+    plt.plot(t, me, label=r"$m(t)$")
+    plt.xlabel(r'$t(s)$', fontsize=12)
+    plt.ylabel(r"$m(t)$", fontsize=12)
+    plt.legend(fontsize=16)
+    plt.tight_layout()
+    plt.grid(True)
+    plt.savefig(PATH+'h_seq_norm.pdf')
+    print('saved picture of h_seq_norm')
+    #plt.show()
+    plt.close()
+
+def f_seq_norm(num):
+    path_dir = "data/"+num+"/"
+    _, tleft, t = load_data(path_dir, 'bat')
+
+    fig = plt.figure(figsize=(8, 6))
+    plt.plot(t, tleft, label=r"$\tau(t)$")
+    plt.xlabel(r'$t(s)$', fontsize=12)
+    plt.ylabel(r"$\tau(t)$", fontsize=12)
+    plt.legend(fontsize=16)
+    plt.tight_layout()
+    plt.grid(True)
+    plt.savefig(PATH+'f_seq_norm.pdf')
+    print('saved picture of f_seq_norm')
+    #plt.show()
+    plt.close()
+
+def f_seq(num):
+    path_dir = "data/"+num+"/"
+    t, _ = mt.battery(path_dir)
+    t = t/1000
+    tleft = max(t) - t
+
+    fig = plt.figure(figsize=(8, 6))
+    plt.plot(t, tleft, label=r"$\tau(t)$")
+    plt.xlabel(r'$t(s)$', fontsize=12)
+    plt.ylabel(r"$\tau(t)$", fontsize=12)
+    plt.legend(fontsize=16)
+    plt.tight_layout()
+    plt.grid(True)
+    plt.savefig(PATH+'f_seq.pdf')
+    print('saved picture of f_seq')
+    plt.close()
+
+def g_seq(num):
+    path_dir = "data/"+num+"/"
+    signal, tleft, t = load_data(path_dir, 'bat')
+
+    fig = plt.figure(figsize=(8, 6))
+    plt.plot(t, signal, label=r'$u(t)$', color='tab:blue')
+    plt.xlabel(r'$t(s)$', fontsize=12)
+    plt.ylabel(r'$u(t)$', fontsize=12)
+    plt.legend(fontsize=16)
+    plt.tight_layout()
+    plt.grid(True)
+    plt.savefig(PATH+'g_seq.pdf')
+    print('saved picture of q_seq')
+    #plt.show()
+    plt.close()
+
+def g_seq_norm(num):
+    path_dir = "data/"+num+"/"
+    signal, tleft, t = load_data(path_dir, 'bat')
+    signal = norm(signal[cutoff:])
+    tleft = tleft[cutoff:]
+    t = t[cutoff:]
+
+    fig = plt.figure(figsize=(8, 6))
+    plt.plot(t, signal, label=r'$u(t)$', color='tab:blue')
+    plt.xlabel(r'$t(s)$', fontsize=12)
+    plt.ylabel(r'$u(t)$', fontsize=12)
+    plt.legend(fontsize=16)
+    plt.tight_layout()
+    plt.grid(True)
+    plt.savefig(PATH+'g_seq_norm.pdf')
+    print('saved picture of q_seq_norm')
+    #plt.show()
+    plt.close()
 
 
 def relu():
@@ -151,7 +146,7 @@ def relu():
     plt.grid(True, linestyle='--', alpha=0.5)
     plt.legend(fontsize=12)
 
-    plt.savefig("pics/figs/relu.pdf")
+    plt.savefig(PATH+"relu.pdf")
     print("saved relu function")
     #plt.show()
     plt.close
@@ -169,7 +164,7 @@ def sigmoid():
     plt.grid(True, linestyle='--', alpha=0.5)
     plt.legend(fontsize=12)
 
-    plt.savefig("pics/figs/sigmoid.pdf")
+    plt.savefig(PATH+"sigmoid.pdf")
     print("saved sigmoid function")
     #plt.show()
     plt.close()
@@ -187,7 +182,7 @@ def tanh():
     plt.grid(True, linestyle='--', alpha=0.5)
     plt.legend(fontsize=12)
 
-    plt.savefig("pics/figs/tanh.pdf")
+    plt.savefig(PATH+"tanh.pdf")
     print("saved function tanh")
     #plt.show()
     plt.close()
@@ -299,23 +294,23 @@ def window(num, n, start, sig_type):
     gs = gridspec.GridSpec(2, 2, height_ratios=[2, 1], width_ratios=[1, 1])
 
     ax1 = fig.add_subplot(gs[0, :])
-    ax1.scatter(t, signal, s=p_size, label=r"$\tilde{g_t}$")
-    ax1.scatter(t, tleft, s=p_size/2, label=r"$\tilde{f_t}$", color='tab:orange')
-    ax1.set_xlabel('Čas t(s)', fontsize=12)
-    ax1.axvspan(t[start], t[start+n], color='black', alpha=0.2)
+    ax1.plot(t, signal, label=r"$u(t)$")
+    ax1.plot(t, tleft, label=r"$\tau (t)$", color='tab:orange')
+    ax1.set_xlabel(r'$\text{Čas } t(s)$', fontsize=12)
+    ax1.axvspan(t[start], t[start+n], color='black', alpha=0.2, label=r'$\text{délka okna } n$')
     ax1.legend(fontsize=16)
 
     ax2 = fig.add_subplot(gs[1, 0])
-    ax2.plot(t[start:start+n], signal[start:start+n], '-o', ms=p_size, label=r"$\tilde{g_t}$")
-    ax2.set_xlabel('Čas t(s)', fontsize=12)
-    ax2.legend(fontsize=12)
-    ax2.set_title("Napětí na baterii")
+    ax2.plot(t[start:start+n], signal[start:start+n], label=r"$u(t)$")
+    ax2.set_xlabel(r'$\text{Čas } t(s)$', fontsize=12)
+    ax2.legend(fontsize=14)
+    ax2.set_title("Napětí baterie")
 
     ax3 = fig.add_subplot(gs[1, 1])
-    ax3.scatter(t[start:start+n], tleft[start:start+n], s=p_size/2, label=r"$\tilde{f_t}$", color='tab:orange')
-    ax3.set_xlabel('Čas t(s)', fontsize=12)
+    ax3.plot(t[start:start+n], tleft[start:start+n], label=r"$\tau (t)$", color='tab:orange')
+    ax3.set_xlabel(r'$\text{Čas } t(s)$', fontsize=12)
     ax3.legend(fontsize=14)
-    ax3.set_title("Kapacita baterie")
+    ax3.set_title("Čas do vybití")
 
     rect1 = Rectangle(
         (t[start], ax2.get_ylim()[0]),  # Bottom-left corner
@@ -360,8 +355,86 @@ def window(num, n, start, sig_type):
     )
     ax1.grid(True)
     plt.tight_layout()
-    plt.savefig("pics/figs/window.pdf")
+    plt.savefig(PATH+"window.pdf")
     print("saved picture of making window")
+    #plt.show()
+    plt.close()
+
+def window2(num, n, start, sig_type):
+    #plt.scatter(t, me, s=p_size, label=r"$\tilde{h_t}$")
+    path_dir = "data/"+num+"/"
+    signal, tleft, t = load_data(path_dir, sig_type)
+    signal = norm(signal[cutoff:])
+    tleft = tleft[cutoff:]
+    t = t[cutoff:]
+
+    fig = plt.figure(figsize=(8, 6))
+    gs = gridspec.GridSpec(2, 2, height_ratios=[2, 1], width_ratios=[1, 1])
+
+    ax1 = fig.add_subplot(gs[0, :])
+    ax1.plot(t, signal, label=r"$u(t)$")
+    ax1.set_xlabel('Čas t(s)', fontsize=12)
+    ax1.axvspan(t[start], t[start+n], color='black', alpha=0.2, label=r'$\text{délka okna } n$')
+    ax1.axvspan(t[start+n], t[start+2*n], color='black', alpha=0.2)
+    ax1.legend(fontsize=16)
+
+    ax2 = fig.add_subplot(gs[1, 0])
+    ax2.plot(t[start:start+n], signal[start:start+n], label=r"$u(t,t+n\Delta t)$")
+    ax2.set_xlabel('Čas t(s)', fontsize=12)
+    ax2.legend(fontsize=12)
+    ax2.set_title("Současné napětí baterie")
+
+    ax3 = fig.add_subplot(gs[1, 1])
+    ax3.plot(t[start:start+n], signal[start+n:start+2*n], label=r"$u(t+n\Delta t,t+2n\Delta t)$", color='tab:orange')
+    ax3.set_xlabel('Čas t(s)', fontsize=12)
+    ax3.legend(fontsize=12)
+    ax3.set_title("Budoucí napětí baterie")
+
+    rect1 = Rectangle(
+        (t[start], ax2.get_ylim()[0]),  # Bottom-left corner
+        t[start + n]-t[start],  # Width
+        ax2.get_ylim()[1] - ax2.get_ylim()[0],  # Height
+        edgecolor='black',
+        facecolor='grey',
+        alpha=0.5,
+        linestyle='--',
+        linewidth=1,
+        label='Zoomed Region'
+    )
+    rect2 = Rectangle(
+        (t[start+n], ax3.get_ylim()[0]),  # Bottom-left corner
+        t[start + 2*n]-t[start+n],  # Width
+        ax3.get_ylim()[1] - ax3.get_ylim()[0],  # Height
+        edgecolor='black',
+        facecolor='grey',
+        alpha=0.5,
+        linestyle='--',
+        linewidth=1,
+        label='Zoomed Region'
+    )
+    ax1.add_patch(rect1)
+    ax1.add_patch(rect2)
+    arrowprops = dict(arrowstyle="->", color="black", linewidth=1, shrinkA=0, shrinkB=0, linestyle=":")
+    ax1.annotate(
+        '',
+        xy=(t[start + n // 2], signal[start] - (ax2.get_ylim()[1] - ax2.get_ylim()[0])),
+        xytext=(0.5, 0.5),
+        textcoords=ax2.transAxes,
+        arrowprops=arrowprops,
+        xycoords='data',
+    )
+    ax1.annotate(
+        '',  # No text, just an arrow
+        xy=(t[start + 2*n-(round(n/2))], signal[start+n] - (ax3.get_ylim()[1] - ax3.get_ylim()[0])),
+        xytext=(0.5, 0.5),
+        textcoords=ax3.transAxes,
+        arrowprops=arrowprops,
+        xycoords='data',
+    )
+    ax1.grid(True)
+    plt.tight_layout()
+    plt.savefig(PATH+"window2.pdf")
+    print("saved picture of making window2")
     #plt.show()
     plt.close()
 
@@ -378,13 +451,13 @@ def motor_graph(num):
     plt.plot(t, motor[2], label=r"Motor $m_2$(PWM)")
     plt.plot(t, motor[3], label=r"Motor $m_3$(PWM)")
     plt.plot(t, motor[4], label=r"Motor $m_4$(PWM)")
-    plt.xlabel('čas t(s)', fontsize=12)
+    plt.xlabel(r'$\text{Čas } t(s)$', fontsize=12)
     plt.ylabel(r'Signály z motorů (PWM)', fontsize=12)
     plt.legend(fontsize=12, loc='upper right')
     plt.grid(True)
     plt.tight_layout()
     print(f"saving figure motors {num}")
-    plt.savefig("pics/figs/"+num+"_motors.pdf")
+    plt.savefig(PATH+num+"_motors.pdf")
     #plt.show()
     plt.close()
 
@@ -396,7 +469,7 @@ def motor_graph(num):
     plt.grid(True)
     plt.tight_layout()
     print(f"saving figure motors average {num}")
-    plt.savefig("pics/figs/"+num+"_motors_avg.pdf")
+    plt.savefig(PATH+num+"_motors_avg.pdf")
     #plt.show()
     plt.close
 
@@ -407,9 +480,9 @@ def pos(num):
     t = t/1000
 
     fig = plt.figure(figsize=(8, 3))
-    plt.plot(t, x, label="Osa x", color="purple")
-    plt.plot(t, y, label="Osa y", color="blue")
-    plt.plot(t, z, label="Osa z", color="red")
+    plt.plot(t, x, label="Trajektorie na ose x", color="purple")
+    plt.plot(t, y, label="Trajektorie na ose y", color="blue")
+    plt.plot(t, z, label="Trajektorie na ose z", color="red")
     plt.xlabel('čas t(s)', fontsize=12)
     plt.ylabel('Vzdálenost od počátku (m)', fontsize=12)
     plt.legend(fontsize=12, loc='upper right')
@@ -418,7 +491,7 @@ def pos(num):
 
     #save
     print(f"saving figure position {num}")
-    plt.savefig("pics/figs/"+num+"_pos.pdf")
+    plt.savefig(PATH+num+"_pos.pdf")
     #plt.show()
     plt.close()
 
@@ -426,11 +499,7 @@ def gen(num):
     path_dir = "data/"+num+"/"
     battery = mt.battery(path_dir)
     t = mt.time(path_dir)
-    motor = mt.readcsv(path_dir+'motor.csv')
-    motor = (motor/65535)*100
-    thr = mt.thrust(path_dir)
-    av = mt.ang_vel(path_dir)
-    me = ((thr[1]/4)*av[1] + (thr[2]/4)*av[2] + (thr[3]/4)*av[3] + (thr[4]/4)*av[4])*0.047*0.1*0.05
+    me = mt.power(path_dir)
     mech = np.sum(me)
 
     t = t/1000
@@ -460,7 +529,7 @@ def gen(num):
     cas = t[-1]
     text = (
         f"{'Čas letu[s]':<20} {cas:>10.2f}\n"
-        f"{'Celková energie[J]':<20} {mech:>10.2f}\n"
+        #f"{'Celková energie[J]':<20} {mech:>10.2f}\n"
         f"{'Uletěno[m]':<20} {dist:>10.2f}\n"
     )
     ax2.text(
@@ -480,7 +549,7 @@ def gen(num):
 
     #save
     print(f"saving figure {num}")
-    plt.savefig("pics/figs/"+num+".pdf")
+    plt.savefig(PATH+num+".pdf")
     #plt.show()
     plt.close()
 
@@ -488,22 +557,25 @@ def gen(num):
         pos(num)
 
 if __name__ == '__main__':
-    # gen('23-1-25')
-    # gen('24-1-25')
-    # gen('31-1-25')
-    # gen('4-2-25')
-    # gen('5-2-25')
-    # motor_graph('5-2-25')
-    # gen('21-2-25')
-    # gen('8-4-25')
+    gen('23-1-25')
+    gen('24-1-25')
+    gen('31-1-25')
+    gen('4-2-25')
+    gen('5-2-25')
+    gen('9-4-25')
+    gen('11-4-25')
+    motor_graph('5-2-25')
+    gen('21-2-25')
+    gen('8-4-25')
     #linear('31-1-25', 'bat')
-    # f_seq('31-1-25')
-    # f_seq_norm('31-1-25')
-    # g_seq('31-1-25')
-    # g_seq_norm('31-1-25')
-    # h_seq_norm('31-1-25')
+    f_seq('31-1-25')
+    f_seq_norm('31-1-25')
+    g_seq('31-1-25')
+    g_seq_norm('31-1-25')
+    h_seq_norm('31-1-25')
     # linear_norm('5-2-25', 'bat')
-    # window('5-2-25', 300, 2000, 'bat') # n indicate window size, start is starting position of that window, sig_type can be 'bat' or 'motor'
+    window('5-2-25', 300, 2000, 'bat') # n indicate window size, start is starting position of that window, sig_type can be 'bat' or 'motor'
+    window2('5-2-25', 300, 2000, 'bat')
     # reg('5-2-25', 300, 1000, 'bat')
     # relu()
     # sigmoid()
