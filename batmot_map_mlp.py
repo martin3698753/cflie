@@ -4,13 +4,12 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import maketab as mt
-import math
 from torch.utils.data import Dataset, DataLoader
 from sklearn.metrics import mean_squared_error, r2_score
 plt.rcParams['mathtext.fontset'] = 'cm'
-PATH = 'bat_pics/bat/qnu/'
-import time
 import gc
+PATH = 'bat_pics/motor/mlp/'
+import time
 
 
 sec_norm = 410
@@ -25,13 +24,15 @@ def norm(signal, norm):
 
 def load_data(path_dir):
     t, signal = mt.battery(path_dir)
+    me = mt.power(path_dir)
     secleft = t[-1]/1000
     tleft = 1 - t / max(t)
     tleft = tleft*(secleft/sec_norm)
     signal = norm(signal[cutoff:], sig_norm)
     tleft = tleft[cutoff:]
     t = t[cutoff:]
-    normalized_train = np.array([signal, tleft])
+    me = me[cutoff:]
+    normalized_train = np.array([signal, me, tleft])
     return normalized_train
 
 def make_data(train_dir):
@@ -57,7 +58,8 @@ def make_data(train_dir):
 class FunctionDataset(Dataset):
     def __init__(self, data, n):
         self.g = data[0]  # Function g
-        self.f = data[1]  # Function f
+        self.h = data[1]
+        self.f = data[2]  # Function f
         self.n = n  # Sequence length
         self.total_length = len(self.g)
 
@@ -69,88 +71,33 @@ class FunctionDataset(Dataset):
         # Get a sequence of g and the corresponding sequence of f
         g_seq = self.g[idx:idx + self.n]
         f_seq = self.f[idx:idx + self.n]
+        h_seq = self.h[idx:idx + self.n]
 
         # Convert to PyTorch tensors
         g_tensor = torch.tensor(g_seq, dtype=torch.float32)
+        h_tensor = torch.tensor(h_seq, dtype=torch.float32)
         f_tensor = torch.tensor(f_seq, dtype=torch.float32)
+        in_tensor = torch.cat((g_tensor, h_tensor))
 
-        return g_tensor, f_tensor
+        return in_tensor, f_tensor
 
 def create_dataloader(data, seq_length, batch_size=1, shuffle=False):
     dataset = FunctionDataset(data, seq_length)
     dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=shuffle)
     return dataloader
 
-class QNU(nn.Module):
-    def __init__(self, input_dim, output_dim, use_bias=True, activation=None):
-        super(QNU, self).__init__()
-        self.input_dim = input_dim
-        self.output_dim = output_dim
-        self.use_bias = use_bias
-        self.activation = activation
-
-        # Linear weights: shape [output_dim, input_dim]
-        self.linear = nn.Parameter(torch.randn(output_dim, input_dim))
-
-        # Quadratic weights: shape [output_dim, input_dim, input_dim]
-        self.quadratic = nn.Parameter(torch.randn(output_dim, input_dim, input_dim))
-        nn.init.uniform_(self.quadratic, a=-1e-4, b=1e-4)
-
-        if use_bias:
-            self.bias = nn.Parameter(torch.randn(output_dim))
-        else:
-            self.register_parameter('bias', None)
-
-        self.reset_parameters()
-
-    def forward(self, x):
-        # x shape: [batch_size, input_dim]
-        batch_size = x.size(0)
-
-        # Linear term: [batch_size, output_dim]
-        linear_term = torch.matmul(x, self.linear.t())
-
-        # Quadratic term
-        # Step 1: Expand input for broadcasting: [batch_size, input_dim, 1] x [batch_size, 1, input_dim]
-        x_expanded = x.unsqueeze(2)  # [batch_size, input_dim, 1]
-        x_transpose = x.unsqueeze(1) # [batch_size, 1, input_dim]
-        x_outer = x_expanded @ x_transpose  # [batch_size, input_dim, input_dim]
-
-        # Step 2: Multiply by quadratic weights and sum: [batch_size, output_dim]
-        quad_term = torch.einsum('bij,oij->bo', x_outer, self.quadratic)
-
-        out = linear_term + quad_term
-
-        #print("Linear term mean:", linear_term.mean().item())
-        #print("Quadratic term mean:", quad_term.mean().item())
-
-        if self.use_bias:
-            out = out + self.bias
-
-        if self.activation is not None:
-            out = self.activation(out)
-
-        return out
-
-    def reset_parameters(self):
-        nn.init.kaiming_uniform_(self.linear, a=math.sqrt(5))
-        nn.init.uniform_(self.quadratic, a=-0.01, b=0.01)  # Small init for stability
-        if self.use_bias:
-            fan_in = self.input_dim
-            bound = 1 / math.sqrt(fan_in)
-            nn.init.uniform_(self.bias, -bound, bound)
-
 class MLP(nn.Module):
     def __init__(self, input_size, hidden_size, output_size):
         super(MLP, self).__init__()
-        self.fc1 = QNU(input_size, hidden_size, activation=nn.Tanh())
+        self.fc1 = nn.Linear(input_size, hidden_size)
         self.fc2 = nn.Linear(hidden_size, output_size)
         self.relu = nn.ReLU()
-        self.register_buffer("hardcoded_matrix", torch.ones(output_size, 1))
+        self.sig = nn.Sigmoid()
 
     def forward(self, x):
         out = self.fc1(x)
-        out = out @ self.hardcoded_matrix.t()
+        out = self.relu(out)
+        out = self.fc2(out)
         return out
 
 def train(num_epochs, dataloader, model, criterion, optimizer):
@@ -169,7 +116,7 @@ def train(num_epochs, dataloader, model, criterion, optimizer):
         avg_loss = (epoch_loss / num_batches)
         epoch_losses.append(avg_loss)
 
-        if (epoch + 1) % 10 == 0:
+        if (epoch+1) % 10 == 0:
             print(f'Epoch [{epoch+1}/{num_epochs}], Average Loss: {avg_loss:.8f}')
     # plt.plot(epoch_losses)
     # plt.xlabel("Epoch")
@@ -179,16 +126,21 @@ def train(num_epochs, dataloader, model, criterion, optimizer):
 def evaluate_and_plot(data, model, n, name, graph=True):
     model.eval()  # Set the model to evaluation mode
 
-    g = data[0]  # Input function g
-    f = data[1]  # True function f
+    g = data[0]
+    h = data[1]
+    f = data[2]
 
     predictions = []
 
     with torch.no_grad():  # Disable gradient computation
         for i in range(0, len(g)-n, n):
-            input_seq = g[i:i+n]
+            g_seq = g[i:i+n]
+            h_seq = h[i:i+n]
+            g_tensor = torch.tensor(g_seq, dtype=torch.float32)
+            h_tensor = torch.tensor(h_seq, dtype=torch.float32)
+            X = torch.cat((g_tensor, h_tensor)).unsqueeze(0)
             # Convert to PyTorch tensor and add batch dimension
-            X = torch.tensor(input_seq, dtype=torch.float32).unsqueeze(0)
+            #X = torch.tensor(input_seq, dtype=torch.float32).unsqueeze(0)
             y = model(X)
             predictions.extend(y.squeeze(0).numpy())  # Remove batch dimension and convert to numpy
 
@@ -198,6 +150,9 @@ def evaluate_and_plot(data, model, n, name, graph=True):
     t = np.arange(0, len(g))
     t = t/10
     plt.plot(t, g, label=r'$u(t)$')
+    t = np.arange(0, len(h))
+    t = t/10
+    plt.plot(h, label=r'$m(t)$')
     t = np.arange(0, len(f))
     t = t/10
     plt.plot(t, f, label=r'$\hat{\tau}(t)$')
@@ -242,7 +197,7 @@ def test_model(n, k, num_epochs, batch_size, learning_rate):
     # batch_size = 16
     # learning_rate = 0.001
 
-    model = MLP(n, k, n)
+    model = MLP(2*n, k, n)
     criterion = nn.MSELoss()
     optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
 
@@ -257,29 +212,33 @@ def test_model(n, k, num_epochs, batch_size, learning_rate):
     mse2, r22 = evaluate_and_plot(test_data, model, n, 'test'+str(n), graph=False)
     for i, d in enumerate(test_dir):
         data = load_data(d)
-        evaluate_and_plot(data, model, n, 'test'+str(i)+str(n))
+        evaluate_and_plot(data, model, n, 'test'+str(i)+str(n)+str(k))
 
-     # Force cleanup (optional)
+    # Force cleanup (optional)
     del model, criterion, optimizer
     gc.collect()  # Garbage collect to ensure no lingering references
 
-    return n, learning_rate, mse1, mse2, r21, r22, (end_time - start_time)
+    return n, k, learning_rate, mse1, mse2, r21, r22, (end_time - start_time)
 
 if __name__ == "__main__":
     rows = []
-    #columns = ['n', 'k', 'num_epochs', 'batch_size', 'lr', 'train_mse', 'train_r2', 'test_mse', 'test_r2']
-    columns = ['n', 'lr', 'train_mse', 'test_mse', 'train_r2', 'test_r2', 'time']
-    # rows.append(test_model(20, 1, 100, 16, 0.0001))
-    rows.append(test_model(40, 1, 100, 16, 0.0001))
-    # rows.append(test_model(60, 1, 100, 16, 0.0001))
-    # rows.append(test_model(80, 1, 100, 16, 0.0001))
+    columns = ['n', 'k', 'lr', 'train_mse', 'test_mse', 'train_r2', 'test_r2', 'time']
+    # rows.append(test_model(10, 1, 100, 16, 0.001))
+    # rows.append(test_model(20, 1, 100, 16, 0.001))
+    rows.append(test_model(30, 1, 50, 16, 0.0001))
+    # rows.append(test_model(40, 1, 100, 16, 0.001))
+    # rows.append(test_model(60, 1, 100, 16, 0.001))
+    # rows.append(test_model(80, 1, 100, 16, 0.001))
 
     df = pd.DataFrame(rows, columns=columns)
     scale_cols = ['train_mse', 'test_mse', 'train_r2', 'test_r2']
     df[scale_cols] = (df[scale_cols] * 1000).round(2)
     df['time'] = df['time'].round(1)
 
+    # Add σ column with ReLU values
+    df.insert(3, 'sigma', r'\text{ReLU}')  # Insert after lr column (position 3)
+
     print(df)
-    df['lr'] = '10^{-4}'
+    df['lr'] = '10^{-3}'
     print("    ")
     print("\n".join("&".join(f"{{${val}$}}" for val in row) + "\\\\" for _, row in df.iterrows()))

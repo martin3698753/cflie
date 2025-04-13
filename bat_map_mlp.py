@@ -8,12 +8,14 @@ from torch.utils.data import Dataset, DataLoader
 from sklearn.metrics import mean_squared_error, r2_score
 plt.rcParams['mathtext.fontset'] = 'cm'
 import gc
+PATH = 'bat_pics/bat/mlp/'
+import time
 
 
 sec_norm = 410
 cutoff = 50 #cutting of time it takes to lift off
-train_dir = (['data/31-1-25/'])
-test_dir = (['data/21-2-25/'])
+train_dir = (['data/24-1-25/', 'data/4-2-25/', 'data/5-2-25/'])
+test_dir = (['data/31-1-25/', 'data/11-4-25/', 'data/9-4-25/'])
 sig_norm = [3.7, 2.3]
 
 def norm(signal, norm):
@@ -22,15 +24,13 @@ def norm(signal, norm):
 
 def load_data(path_dir):
     t, signal = mt.battery(path_dir)
-    me = mt.power(path_dir)
     secleft = t[-1]/1000
     tleft = 1 - t / max(t)
     tleft = tleft*(secleft/sec_norm)
     signal = norm(signal[cutoff:], sig_norm)
     tleft = tleft[cutoff:]
     t = t[cutoff:]
-    me = me[cutoff:]
-    normalized_train = np.array([signal, me, tleft])
+    normalized_train = np.array([signal, tleft])
     return normalized_train
 
 def make_data(train_dir):
@@ -56,8 +56,7 @@ def make_data(train_dir):
 class FunctionDataset(Dataset):
     def __init__(self, data, n):
         self.g = data[0]  # Function g
-        self.h = data[1]
-        self.f = data[2]  # Function f
+        self.f = data[1]  # Function f
         self.n = n  # Sequence length
         self.total_length = len(self.g)
 
@@ -69,15 +68,12 @@ class FunctionDataset(Dataset):
         # Get a sequence of g and the corresponding sequence of f
         g_seq = self.g[idx:idx + self.n]
         f_seq = self.f[idx:idx + self.n]
-        h_seq = self.h[idx:idx + self.n]
 
         # Convert to PyTorch tensors
         g_tensor = torch.tensor(g_seq, dtype=torch.float32)
-        h_tensor = torch.tensor(h_seq, dtype=torch.float32)
         f_tensor = torch.tensor(f_seq, dtype=torch.float32)
-        in_tensor = torch.cat((g_tensor, h_tensor))
 
-        return in_tensor, f_tensor
+        return g_tensor, f_tensor
 
 def create_dataloader(data, seq_length, batch_size=1, shuffle=False):
     dataset = FunctionDataset(data, seq_length)
@@ -121,41 +117,41 @@ def train(num_epochs, dataloader, model, criterion, optimizer):
     # plt.ylabel("Loss")
     # plt.show()
 
-def evaluate_and_plot(data, model, n, name):
+def evaluate_and_plot(data, model, n, name, graph=True):
     model.eval()  # Set the model to evaluation mode
 
-    g = data[0]
-    h = data[1]
-    f = data[2]
+    g = data[0]  # Input function g
+    f = data[1]  # True function f
 
     predictions = []
 
     with torch.no_grad():  # Disable gradient computation
         for i in range(0, len(g)-n, n):
-            g_seq = g[i:i+n]
-            h_seq = h[i:i+n]
-            g_tensor = torch.tensor(g_seq, dtype=torch.float32)
-            h_tensor = torch.tensor(h_seq, dtype=torch.float32)
-            X = torch.cat((g_tensor, h_tensor)).unsqueeze(0)
+            input_seq = g[i:i+n]
             # Convert to PyTorch tensor and add batch dimension
-            #X = torch.tensor(input_seq, dtype=torch.float32).unsqueeze(0)
+            X = torch.tensor(input_seq, dtype=torch.float32).unsqueeze(0)
             y = model(X)
             predictions.extend(y.squeeze(0).numpy())  # Remove batch dimension and convert to numpy
 
     predictions = np.array(predictions)
     # Plot the results
     plt.figure(figsize=(10, 6))
-    plt.plot(g, label=r'$g_t$')
-    plt.plot(f, label=r'${f_t}$')
-    plt.plot(h, label=r'${h_t}$')
-    plt.plot(predictions, label=r'$y_t$')
+    t = np.arange(0, len(g))
+    t = t/10
+    plt.plot(t, g, label=r'$u(t)$')
+    t = np.arange(0, len(f))
+    t = t/10
+    plt.plot(t, f, label=r'$\hat{\tau}(t)$')
+    t = np.arange(0, len(predictions))
+    t = t/10
+    plt.plot(t, predictions, label=r'$y(t)$')
 
     mse = mean_squared_error(f[:len(predictions)], predictions)
     r2 = r2_score(f[:len(predictions)], predictions)
-    text = (
-        f"{'MSE':<5} {mse:>.4e}\n"
-        f"{'R2':<5} {r2:>.4e}"
-    )
+    # text = (
+    #     f"{'MSE':<5} {mse:>.4e}\n"
+    #     f"{'R2':<5} {r2:>.4e}"
+    # )
 
     # plt.text(
     #     0.0, 0.0,
@@ -168,12 +164,13 @@ def evaluate_and_plot(data, model, n, name):
     # )
 
     # Add labels and legend
-    plt.xlabel('t(ms)')
-    plt.legend(fontsize=16)
-    plt.grid(True)
-    plt.show()
-    #plt.savefig('bat_pics/'+name+'.pdf')
-    plt.close()
+    if graph is True:
+        plt.xlabel('t(s)')
+        plt.legend(fontsize=16)
+        plt.grid(True)
+        #plt.show()
+        plt.savefig(PATH+name+'.pdf')
+        plt.close()
     return mse, r2
 
 
@@ -186,33 +183,52 @@ def test_model(n, k, num_epochs, batch_size, learning_rate):
     # batch_size = 16
     # learning_rate = 0.001
 
-    model = MLP(2*n, k, n)
+    model = MLP(n, k, n)
     criterion = nn.MSELoss()
     optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
 
     train_data = make_data(train_dir)
     test_data = make_data(test_dir)
     dataloader = create_dataloader(train_data, n, batch_size=batch_size, shuffle=True)
+    start_time = time.time()
     train(num_epochs, dataloader, model, criterion, optimizer)
+    end_time = time.time()
+    print(f"Training completed in {(end_time - start_time):.4f} seconds")
     mse1, r21 = evaluate_and_plot(train_data, model, n, 'train'+str(n))
-    mse2, r22 = evaluate_and_plot(test_data, model, n, 'test'+str(n))
+    mse2, r22 = evaluate_and_plot(test_data, model, n, 'test'+str(n), graph=False)
+    for i, d in enumerate(test_dir):
+        data = load_data(d)
+        evaluate_and_plot(data, model, n, 'test'+str(i)+str(n)+str(k))
 
     # Force cleanup (optional)
     del model, criterion, optimizer
     gc.collect()  # Garbage collect to ensure no lingering references
 
-    return n, k, num_epochs, batch_size, learning_rate, mse1, r21, mse2, r22
+    return n, k, learning_rate, mse1, mse2, r21, r22, (end_time - start_time)
 
 if __name__ == "__main__":
     rows = []
-    columns = ['n', 'k', 'num_epochs', 'batch_size', 'lr', 'train_mse', 'train_r2', 'test_mse', 'test_r2']
-    # rows.append(test_model(10, 1, 100, 16, 0.001))
-    # rows.append(test_model(20, 1, 100, 16, 0.001))
-    rows.append(test_model(30, 1, 50, 16, 0.0001))
-    # rows.append(test_model(40, 1, 100, 16, 0.001))
-    # rows.append(test_model(60, 1, 100, 16, 0.001))
-    # rows.append(test_model(80, 1, 100, 16, 0.001))
+    #columns = ['n', 'k', 'num_epochs', 'batch_size', 'lr', 'train_mse', 'train_r2', 'test_mse', 'test_r2']
+    columns = ['n', 'k', 'lr', 'train_mse', 'test_mse', 'train_r2', 'test_r2', 'time']
+    # rows.append(test_model(20, 10, 20, 16, 0.001))
+    # rows.append(test_model(40, 10, 100, 16, 0.001))
+    # rows.append(test_model(60, 10, 100, 16, 0.001))
+    # rows.append(test_model(20, 40, 100, 16, 0.001))
+    # rows.append(test_model(40, 40, 100, 16, 0.001))
+    # rows.append(test_model(60, 40, 100, 16, 0.001))
+    # rows.append(test_model(20, 70, 100, 16, 0.001))
+    rows.append(test_model(40, 70, 100, 16, 0.001))
+    # rows.append(test_model(60, 70, 100, 16, 0.001))
 
     df = pd.DataFrame(rows, columns=columns)
+    scale_cols = ['train_mse', 'test_mse', 'train_r2', 'test_r2']
+    df[scale_cols] = (df[scale_cols] * 1000).round(2)
+    df['time'] = df['time'].round(1)
+
+    # Add σ column with ReLU values
+    df.insert(3, 'sigma', r'\text{ReLU}')  # Insert after lr column (position 3)
+
     print(df)
-    #print(test_model(30, 50, 10, 16, 0.001))
+    df['lr'] = '10^{-3}'
+    print("    ")
+    print("\n".join("&".join(f"{{${val}$}}" for val in row) + "\\\\" for _, row in df.iterrows()))

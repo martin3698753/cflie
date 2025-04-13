@@ -66,10 +66,11 @@ class FeedforwardModel(nn.Module):
         self.fc2 = nn.Linear(hidden_size, output_size)
         self.relu = nn.ReLU()
         self.sig = nn.Sigmoid()
+        self.tanh = nn.Tanh()
 
     def forward(self, x):
         x = self.fc1(x)
-        x = self.sig(x)
+        x = self.tanh(x)
         x = self.fc2(x)
         return x
 
@@ -95,7 +96,7 @@ def train(num_epochs, dataloader, model, criterion, optimizer):
         if (epoch + 1) % 10 == 0:
             print(f'Epoch [{epoch+1}/{num_epochs}], Loss: {avg_loss:.6f}')
 
-def predict(data, seq_length, theta=30):
+def predict(data, seq_length, theta, model):
     model.eval()
     with torch.no_grad():
         pred = np.empty(0)
@@ -108,26 +109,22 @@ def predict(data, seq_length, theta=30):
                 y = model(y)
                 y_pred = y.squeeze(0).numpy()
                 pred = np.append(pred, y_pred)
-                if(len(data) <= i+(2*30*(j+1))):
-                    break
+                # if(len(data) <= i+(2*30*(j+1))):
+                #     break
             plt.axvline(i+seq_length, linestyle=":", color="black", linewidth=0.5)
-        plt.plot(data)
+
         pred = np.append(np.zeros(seq_length), pred)
-        plt.plot(pred)
-        plt.show()
 
         new_pred = pred[seq_length:len(data)]
         new_data = data[seq_length:]
-        print(np.sqrt(np.mean((new_pred- new_data)**2)))
+        plt.plot(new_data)
+        plt.plot(new_pred)
+        plt.show()
+        mse = mean_squared_error(new_data, new_pred)
+        r2 = r2_score(new_data, new_pred)
+        return mse, r2
 
-
-if __name__ == "__main__":
-    seq_length = 50
-    hidden_size = 64
-    learning_rate = 0.001
-    num_epochs = 100
-    batch_size = 32
-
+def test_model(seq_length, hidden_size, num_epochs, batch_size, learning_rate, theta):
     train_data = make_data(train_dir)
     dataset = SequenceDataset(train_data, seq_length)
     dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=True)
@@ -135,6 +132,18 @@ if __name__ == "__main__":
     criterion = nn.MSELoss()
     optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
     train(num_epochs, dataloader, model, criterion, optimizer)
-    predict(train_data, seq_length, theta=10)
+    mse, r2 = predict(train_data, seq_length, theta, model)
+    print(mse, r2)
+
+
+if __name__ == "__main__":
+    seq_length = 50
+    hidden_size = 80
+    learning_rate = 0.0001
+    num_epochs = 200
+    batch_size = 32
+    theta = 150
+
+    test_model(seq_length, hidden_size, num_epochs, batch_size, learning_rate, theta)
 
 
