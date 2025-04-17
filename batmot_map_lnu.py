@@ -150,9 +150,7 @@ def evaluate_and_plot(data, model, n, name, graph=True):
     t = np.arange(0, len(g))
     t = t/10
     plt.plot(t, g, label=r'$u(t)$')
-    t = np.arange(0, len(h))
-    t = t/10
-    plt.plot(h, label=r'$m(t)$')
+    plt.plot(t, h, label=r'$m(t)$', color="tab:red")
     t = np.arange(0, len(f))
     t = t/10
     plt.plot(t, f, label=r'$\hat{\tau}(t)$')
@@ -223,10 +221,9 @@ def test_model(n, k, num_epochs, batch_size, learning_rate):
 if __name__ == "__main__":
     rows = []
     columns = ['n', 'lr', 'train_mse', 'test_mse', 'train_r2', 'test_r2', 'time']
-    # rows.append(test_model(10, 1, 100, 16, 0.001))
-    # rows.append(test_model(20, 1, 100, 16, 0.001))
-    rows.append(test_model(30, 1, 50, 16, 0.0001))
-    # rows.append(test_model(40, 1, 100, 16, 0.001))
+    rows.append(test_model(10, 1, 100, 16, 0.0001))
+    rows.append(test_model(30, 1, 100, 16, 0.0001))
+    rows.append(test_model(50, 1, 100, 16, 0.0001))
     # rows.append(test_model(60, 1, 100, 16, 0.001))
     # rows.append(test_model(80, 1, 100, 16, 0.001))
 

@@ -16,7 +16,7 @@ cutoff = 50
 sec_norm = 410
 p_size=3
 #PATH = 'pics/figs/'
-PATH = '/home/martin/bak/bak(4)/figs/'
+PATH = '/home/martin/bak/bak(7)/figs/'
 
 def norm_motor(signal):
     return signal
@@ -447,13 +447,13 @@ def motor_graph(num):
     power = mt.power(path_dir)
 
     fig = plt.figure(figsize=(8, 4))
-    plt.plot(t, motor[1], label=r"Motor $m_1$(PWM)")
-    plt.plot(t, motor[2], label=r"Motor $m_2$(PWM)")
-    plt.plot(t, motor[3], label=r"Motor $m_3$(PWM)")
-    plt.plot(t, motor[4], label=r"Motor $m_4$(PWM)")
+    plt.plot(t, motor[1], label=r"Motor $m_1 (\%)$")
+    plt.plot(t, motor[2], label=r"Motor $m_2 (\%)$")
+    plt.plot(t, motor[3], label=r"Motor $m_3 (\%)$")
+    plt.plot(t, motor[4], label=r"Motor $m_4 (\%)$")
     plt.xlabel(r'$\text{Čas } t(s)$', fontsize=12)
-    plt.ylabel(r'Signály z motorů (PWM)', fontsize=12)
-    plt.legend(fontsize=12, loc='upper right')
+    plt.ylabel(r'Signály PWM z motorů (%)', fontsize=12)
+    plt.legend(fontsize=12, loc='lower right')
     plt.grid(True)
     plt.tight_layout()
     print(f"saving figure motors {num}")
@@ -462,9 +462,9 @@ def motor_graph(num):
     plt.close()
 
     fig = plt.figure(figsize=(8, 4))
-    plt.plot(t, power, label="Průměr M (PWM)")
+    plt.plot(t, power, label=r"$m (%)$")
     plt.xlabel('čas t(s)', fontsize=12)
-    plt.ylabel('Průměr motorů M (PWM)', fontsize=12)
+    plt.ylabel('Průměr signálu PWM motorů (%)', fontsize=12)
     plt.legend(fontsize=12, loc='upper right')
     plt.grid(True)
     plt.tight_layout()
@@ -513,14 +513,14 @@ def gen(num):
 
     fig, (ax1, ax2) = plt.subplots(nrows=2, ncols=1, figsize=(8, 6))
 
-    ax1.plot(t, me, label='Průměr motorů (PWM)')
+    ax1.plot(t, me, label=r'funkce $m$ v $(\%)$')
     ax1.set_xlabel('čas t(s)', fontsize=12)
-    ax1.set_ylabel('Průměr motorů (PWM)', fontsize=12)
+    ax1.set_ylabel(r'Aritmetický průměr motorů $(\%)$', fontsize=12)
     ax1.legend(loc='upper right')
     ax1.grid(True)
 
     # Plot the second dataset
-    ax2.plot(battery[0], battery[1], label='Napětí na baterii (V)')
+    ax2.plot(battery[0], battery[1], label=r'Napětí baterie $u(V)$')
     ax2.set_xlabel('čas t(s)', fontsize=12)
     ax2.set_ylabel('Napětí (V)', fontsize=12)
     ax2.legend(loc='upper right')
