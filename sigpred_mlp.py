@@ -48,10 +48,11 @@ class FeedforwardModel(nn.Module):
         self.fc2 = nn.Linear(hidden_size, output_size)
         self.relu = nn.ReLU()
         self.sig = nn.Sigmoid()
+        self.tanh = nn.Tanh()
 
     def forward(self, x):
         x = self.fc1(x)
-        x = self.sig(x)
+        x = self.tanh(x)
         x = self.fc2(x)
         return x
 
@@ -173,16 +174,21 @@ if __name__ == "__main__":
     rows = []
     columns = ['n', 'k', 'lr', 'train_mse_t1', 'test_mse_t1', 'train_r2_t1', 'test_r2_t1', 'train_mse_t2', 'test_mse_t2', 'train_r2_t2', 'test_r2_t2', 'time']
     #test_model(seq_length, hidden_size, num_epochs, batch_size, learning_rate, theta)
-    rows.append(test_model(50, 1, 20, 16, 0.0001, [5, 10]))
+    rows.append(test_model(30, 40, 100, 16, 0.0001, [20, 30]))
+    rows.append(test_model(40, 40, 100, 16, 0.0001, [20, 30]))
+    rows.append(test_model(50, 40, 100, 16, 0.0001, [20, 30]))
+    rows.append(test_model(30, 60, 100, 16, 0.0001, [20, 30]))
+    rows.append(test_model(40, 60, 100, 16, 0.0001, [20, 30]))
+    rows.append(test_model(50, 60, 100, 16, 0.0001, [20, 30]))
 
     df = pd.DataFrame(rows, columns=columns)
     scale_cols = ['train_mse_t1', 'test_mse_t1', 'train_r2_t1', 'test_r2_t1', 'train_mse_t2', 'test_mse_t2', 'train_r2_t2', 'test_r2_t2']
     df[scale_cols] = (df[scale_cols] * 1000).round(2)
     df['time'] = df['time'].round(1)
 
-    df.insert(3, 'sigma', r'\text{ReLU}')
+    df.insert(3, 'sigma', r'\text{tanh}')
 
     print(df)
-    df['lr'] = '10^{-3}'
+    df['lr'] = '10^{-4}'
     print("    ")
     print("\n".join("&".join(f"{{${val}$}}" for val in row) + "\\\\" for _, row in df.iterrows()))

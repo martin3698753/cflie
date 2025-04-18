@@ -230,9 +230,9 @@ if __name__ == "__main__":
     rows = []
     columns = ['n', 'lr', 'train_mse_t1', 'test_mse_t1', 'train_r2_t1', 'test_r2_t1', 'train_mse_t2', 'test_mse_t2', 'train_r2_t2', 'test_r2_t2', 'time']
     #test_model(seq_length, hidden_size, num_epochs, batch_size, learning_rate, theta)
-    rows.append(test_model(30, 1, 100, 16, 0.0001, [30, 50]))
-    # rows.append(test_model(50, 1, 100, 16, 0.0001, [5, 10]))
-    # rows.append(test_model(70, 1, 100, 16, 0.0001, [5, 10]))
+    rows.append(test_model(30, 1, 100, 16, 0.0001, [10, 20]))
+    rows.append(test_model(40, 1, 100, 16, 0.0001, [10, 20]))
+    rows.append(test_model(50, 1, 100, 16, 0.0001, [10, 20]))
 
     df = pd.DataFrame(rows, columns=columns)
     scale_cols = ['train_mse_t1', 'test_mse_t1', 'train_r2_t1', 'test_r2_t1', 'train_mse_t2', 'test_mse_t2', 'train_r2_t2', 'test_r2_t2']

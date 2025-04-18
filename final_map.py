@@ -9,7 +9,7 @@ from sklearn.metrics import mean_squared_error, r2_score
 plt.rcParams['mathtext.fontset'] = 'cm'
 import gc
 #PATH = 'bat_pics/motor/mlp/'
-PATH = 'bat_pics/final/tanh/'
+PATH = 'bat_pics/final/'
 import time
 
 
@@ -98,7 +98,7 @@ class MLP(nn.Module):
 
     def forward(self, x):
         out = self.fc1(x)
-        out = self.tanh(out)
+        out = self.relu(out)
         out = self.fc2(out)
         return out
 
@@ -216,6 +216,18 @@ def test_model(n, k, num_epochs, batch_size, learning_rate):
         data = load_data(d)
         evaluate_and_plot(data, model, n, 'test'+str(i)+str(n)+str(k))
 
+    checkpoint = {
+        'seq_length': n,
+        'input_size': 2*n,
+        'hidden_size': k,
+        'output_size': n,
+        'cutoff': cutoff,
+        'sig_norm': sig_norm,
+        'sec_norm': sec_norm,
+        'state_dict': model.state_dict(),
+    }
+    torch.save(checkpoint, 'final_model.pth')
+
     # Force cleanup (optional)
     del model, criterion, optimizer
     gc.collect()  # Garbage collect to ensure no lingering references
@@ -223,6 +235,9 @@ def test_model(n, k, num_epochs, batch_size, learning_rate):
     return n, k, learning_rate, mse1, mse2, r21, r22, (end_time - start_time)
 
 if __name__ == "__main__":
+    n = 10
+    k = 50
+    lr = 0.0001
     rows = []
     columns = ['n', 'k', 'lr', 'train_mse', 'test_mse', 'train_r2', 'test_r2', 'time']
     # rows.append(test_model(10, 20, 100, 16, 0.0001))
@@ -234,7 +249,7 @@ if __name__ == "__main__":
     # rows.append(test_model(10, 60, 100, 16, 0.0001))
     # rows.append(test_model(30, 60, 100, 16, 0.0001))
     # rows.append(test_model(50, 60, 100, 16, 0.0001))
-    rows.append(test_model(10, 50, 200, 16, 0.0001))
+    rows.append(test_model(n, k, 200, 16, lr))
 
     df = pd.DataFrame(rows, columns=columns)
     scale_cols = ['train_mse', 'test_mse', 'train_r2', 'test_r2']

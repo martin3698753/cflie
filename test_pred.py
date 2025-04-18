@@ -1,17 +1,17 @@
 import numpy as np
 import maketab as mt
-from batpred_seq import BatSeqModel
-import matplotlib.pyplot as plt
-
-def load_data(path_dir):
-    t, signal = mt.battery(path_dir)
-    tleft = 1 - t / max(t)
-    return signal, tleft, t
+from batpred import BatSeqModel
 
 model = BatSeqModel()
 
-signal, _, _ = load_data('data/31-1-25/')
-for i in signal[1000:]:
-    model.pred(i)
+def load_data(path_dir):
+    t, u = mt.battery(path_dir)
+    m = mt.power(path_dir)
+    return u, m
+
+u, m = load_data('data/31-1-25/')
+
+for ui, mi in zip(u, m):
+    model.pred(ui, mi)
 
 model.done()
