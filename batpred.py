@@ -49,7 +49,7 @@ class BatSeqModel:
             pred_sec = pred * self.sec_norm
             self.g = np.append(self.g, pred_sec)
             self.signal = np.append(self.signal, u_seq)
-            print(f"prediction: {pred_sec.mean():.2f} s")
+            print(f"Zbývající čas letu: {pred_sec.mean():.2f} s")
             self.write_to_file(timestamp, pred_sec)
 
     def pred(self, u, m, timestamp):
