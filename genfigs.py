@@ -16,14 +16,14 @@ cutoff = 50
 sec_norm = 410
 p_size=3
 #PATH = 'pics/figs/'
-PATH = '/home/martin/bak/bak(7)/figs/'
+PATH = '/home/martin/bak/bak(11)/figs/'
 
 def norm_motor(signal):
     return signal
 
 def norm(signal):
-    norm_lower = 2
-    norm_upper = 4
+    norm_lower = 2.3
+    norm_upper = 3.7
     signal = (signal - norm_lower) / (norm_upper - norm_lower)
     return signal
 
@@ -55,7 +55,7 @@ def h_seq_norm(num):
     fig = plt.figure(figsize=(8, 6))
     plt.plot(t, me, label=r"$m(t)$")
     plt.xlabel(r'$t(s)$', fontsize=12)
-    plt.ylabel(r"$m(t)$", fontsize=12)
+    plt.ylabel(r"$\text{Signál PWM } m [ \% ]$", fontsize=14)
     plt.legend(fontsize=16)
     plt.tight_layout()
     plt.grid(True)
@@ -71,7 +71,7 @@ def f_seq_norm(num):
     fig = plt.figure(figsize=(8, 6))
     plt.plot(t, tleft, label=r"$\tau(t)$")
     plt.xlabel(r'$t(s)$', fontsize=12)
-    plt.ylabel(r"$\tau(t)$", fontsize=12)
+    plt.ylabel(r"$\text{Normalizovaný zbývající čas do vybití } \tau \ [s]$", fontsize=15)
     plt.legend(fontsize=16)
     plt.tight_layout()
     plt.grid(True)
@@ -89,7 +89,7 @@ def f_seq(num):
     fig = plt.figure(figsize=(8, 6))
     plt.plot(t, tleft, label=r"$\tau(t)$")
     plt.xlabel(r'$t(s)$', fontsize=12)
-    plt.ylabel(r"$\tau(t)$", fontsize=12)
+    plt.ylabel(r"$\text{Zbývající čas do vybití } \tau \ [s]$", fontsize=15)
     plt.legend(fontsize=16)
     plt.tight_layout()
     plt.grid(True)
@@ -104,7 +104,7 @@ def g_seq(num):
     fig = plt.figure(figsize=(8, 6))
     plt.plot(t, signal, label=r'$u(t)$', color='tab:blue')
     plt.xlabel(r'$t(s)$', fontsize=12)
-    plt.ylabel(r'$u(t)$', fontsize=12)
+    plt.ylabel(r'$\text{Napětí baterie } u \ [V]$', fontsize=14)
     plt.legend(fontsize=16)
     plt.tight_layout()
     plt.grid(True)
@@ -123,7 +123,7 @@ def g_seq_norm(num):
     fig = plt.figure(figsize=(8, 6))
     plt.plot(t, signal, label=r'$u(t)$', color='tab:blue')
     plt.xlabel(r'$t(s)$', fontsize=12)
-    plt.ylabel(r'$u(t)$', fontsize=12)
+    plt.ylabel(r'$\text{Normalizované napětí baterie } u \ [ \% ]$', fontsize=14)
     plt.legend(fontsize=16)
     plt.tight_layout()
     plt.grid(True)
@@ -187,22 +187,29 @@ def tanh():
     #plt.show()
     plt.close()
 
-def experiment_battery_real_time(num):
+def experiment(num):
     path_dir = "data/"+num+"/"
-    battery = mt.battery(path_dir)
-    t = np.arange(0,battery.shape[1]*100, 100)*0.1
+    me, _, t = load_data(path_dir, 'motor')
+    signal, tleft, t = load_data(path_dir, 'bat')
+    signal = norm(signal)
     pred = mt.prediction(path_dir)
+    pred = pred/410
+    t = np.arange(0, len(signal))
 
-    plt.figure(figsize=(8, 6))
-    plt.plot(t[:len(pred)], pred, label='predikce kapacity', color='tab:green')
-    plt.plot(t, norm(battery[1]), label='baterie (V)', color='tab:blue')
-    plt.xlabel("čas t(s)", fontsize=12)
-    plt.legend()
-
-    plt.savefig('pics/figs/experiment_battery_real_time.pdf')
-    print('saved fig of battery prediction in real time')
-    plt.close
+    fig = plt.figure(figsize=(8, 6))
+    plt.plot(t, signal, label=r'$u(t)$', color='tab:blue')
+    plt.plot(t, me, label=r'$m(t)$', color='tab:red')
+    plt.plot(t[:len(pred)], pred, label=r'$y(t) / T_a$', color='tab:green')
+    plt.xlabel(r'$t(s)$', fontsize=12)
+    #plt.ylabel(r'$\text{Normalizované napětí baterie } u \ [ \% ]$', fontsize=14)
+    plt.legend(fontsize=16)
+    plt.tight_layout()
+    plt.grid(True)
+    plt.savefig(PATH+'experiment.pdf')
+    print('saved picture of experiment')
     #plt.show()
+    plt.close()
+
 
 def reg(num, n, start, sig_type):
     path_dir = "data/"+num+"/"
@@ -382,7 +389,7 @@ def window2(num, n, start, sig_type):
     ax2.plot(t[start:start+n], signal[start:start+n], label=r"$u(t,t+n\Delta t)$")
     ax2.set_xlabel('Čas t(s)', fontsize=12)
     ax2.legend(fontsize=12)
-    ax2.set_title("Současné napětí baterie")
+    ax2.set_title("Předchozí napětí baterie")
 
     ax3 = fig.add_subplot(gs[1, 1])
     ax3.plot(t[start:start+n], signal[start+n:start+2*n], label=r"$u(t+n\Delta t,t+2n\Delta t)$", color='tab:orange')
@@ -447,12 +454,12 @@ def motor_graph(num):
     power = mt.power(path_dir)
 
     fig = plt.figure(figsize=(8, 4))
-    plt.plot(t, motor[1], label=r"Motor $m_1 (\%)$")
-    plt.plot(t, motor[2], label=r"Motor $m_2 (\%)$")
-    plt.plot(t, motor[3], label=r"Motor $m_3 (\%)$")
-    plt.plot(t, motor[4], label=r"Motor $m_4 (\%)$")
+    plt.plot(t, motor[1], label=r"Motor $m_1$")
+    plt.plot(t, motor[2], label=r"Motor $m_2$")
+    plt.plot(t, motor[3], label=r"Motor $m_3$")
+    plt.plot(t, motor[4], label=r"Motor $m_4$")
     plt.xlabel(r'$\text{Čas } t(s)$', fontsize=12)
-    plt.ylabel(r'Signály PWM z motorů (%)', fontsize=12)
+    plt.ylabel(r'Signály PWM z motorů [%]', fontsize=12)
     plt.legend(fontsize=12, loc='lower right')
     plt.grid(True)
     plt.tight_layout()
@@ -462,9 +469,9 @@ def motor_graph(num):
     plt.close()
 
     fig = plt.figure(figsize=(8, 4))
-    plt.plot(t, power, label=r"$m (%)$")
-    plt.xlabel('čas t(s)', fontsize=12)
-    plt.ylabel('Průměr signálu PWM motorů (%)', fontsize=12)
+    plt.plot(t, power, label=r"$m (t)$")
+    plt.xlabel(r'$\text{Čas } t(s)$', fontsize=12)
+    plt.ylabel('Průměr signálu PWM motorů [%]', fontsize=12)
     plt.legend(fontsize=12, loc='upper right')
     plt.grid(True)
     plt.tight_layout()
@@ -483,8 +490,8 @@ def pos(num):
     plt.plot(t, x, label="Trajektorie na ose x", color="purple")
     plt.plot(t, y, label="Trajektorie na ose y", color="blue")
     plt.plot(t, z, label="Trajektorie na ose z", color="red")
-    plt.xlabel('čas t(s)', fontsize=12)
-    plt.ylabel('Vzdálenost od počátku (m)', fontsize=12)
+    plt.xlabel(r'$\text{čas } t(s)$', fontsize=12)
+    plt.ylabel(r'$\text{Vzdálenost od počátku } [m]$', fontsize=12)
     plt.legend(fontsize=12, loc='upper right')
     plt.grid(True)
     plt.tight_layout()
@@ -513,17 +520,17 @@ def gen(num):
 
     fig, (ax1, ax2) = plt.subplots(nrows=2, ncols=1, figsize=(8, 6))
 
-    ax1.plot(t, me, label=r'funkce $m$ v $(\%)$')
-    ax1.set_xlabel('čas t(s)', fontsize=12)
-    ax1.set_ylabel(r'Aritmetický průměr motorů $(\%)$', fontsize=12)
-    ax1.legend(loc='upper right')
+    ax1.plot(t, me, label=r'$m(t)$')
+    ax1.set_xlabel(r'$\text{čas } t(s)$', fontsize=12)
+    ax1.set_ylabel(r'$\text{Aritmetický průměr motorů } [\%]$', fontsize=13)
+    ax1.legend(loc='upper right', fontsize=12)
     ax1.grid(True)
 
     # Plot the second dataset
-    ax2.plot(battery[0], battery[1], label=r'Napětí baterie $u(V)$')
-    ax2.set_xlabel('čas t(s)', fontsize=12)
-    ax2.set_ylabel('Napětí (V)', fontsize=12)
-    ax2.legend(loc='upper right')
+    ax2.plot(battery[0], battery[1], label=r'$u(t)$')
+    ax2.set_xlabel(r'$\text{čas } t(s)$', fontsize=12)
+    ax2.set_ylabel(r'$\text{Napětí baterie } u \ [V]$', fontsize=14)
+    ax2.legend(loc='upper right', fontsize=12)
     ax2.grid(True)
 
     cas = t[-1]
@@ -567,17 +574,19 @@ if __name__ == '__main__':
     motor_graph('5-2-25')
     gen('21-2-25')
     gen('8-4-25')
-    #linear('31-1-25', 'bat')
+    # # #linear('31-1-25', 'bat')
     f_seq('31-1-25')
     f_seq_norm('31-1-25')
     g_seq('31-1-25')
     g_seq_norm('31-1-25')
     h_seq_norm('31-1-25')
-    # linear_norm('5-2-25', 'bat')
+    experiment('18-4-25')
+    # experiment('6-3-25')
+    # # # linear_norm('5-2-25', 'bat')
     window('5-2-25', 300, 2000, 'bat') # n indicate window size, start is starting position of that window, sig_type can be 'bat' or 'motor'
     window2('5-2-25', 300, 2000, 'bat')
     # reg('5-2-25', 300, 1000, 'bat')
     # relu()
     # sigmoid()
     # tanh()
-    # experiment_battery_real_time('6-3-25')
+    # experiment('6-3-25')

@@ -78,7 +78,7 @@ def prediction(dirname):
     filename = dirname + 'pred.csv'
     df = pd.read_csv(filename)
     colar = np.array(df)
-    colar = colar.T[0]
+    colar = colar.T[1]
     return colar
 
 def position_graph(dirname):

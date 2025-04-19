@@ -36,7 +36,7 @@ def denorm(normalized_data, original_min, original_max):
 if __name__ == '__main__':
     #path_dir = pickdir.choose_directory('data')+'/'
     #path_dir = 'data/26-11-24/'
-    path_dir = 'data/9-4-25/'
+    path_dir = 'data/18-4-25/'
     battery = mt.battery(path_dir)
     #t = np.arange(0,battery.shape[1]*100, 100)*0.1
     t = mt.time(path_dir)
@@ -44,8 +44,8 @@ if __name__ == '__main__':
     en = mt.sum_ar(me)
     print(en[-1])
     en = en/2600
-    #pred = mt.prediction(path_dir)
-    #print(pred.shape, battery.shape)
+    pred = mt.prediction(path_dir)
+    print(pred.shape, battery.shape)
 
 
     # motor = mt.readcsv(path_dir+'motor.csv')
@@ -74,10 +74,10 @@ if __name__ == '__main__':
     # plt.plot(t, av[3], label='m3 RPM')
     # plt.plot(t, av[4], label='m4 RPM')
     plt.plot(t, me, label='Výkon (W)')
-    plt.plot(t, en)
+    #plt.plot(t, en)
     # plt.plot(t, energy, label='battery energy (J)')
     # plt.plot(t, work, label='work (J)')
-    #plt.plot(t[:len(pred)], pred)
+    plt.plot(t[:len(pred)], pred)
     plt.plot(t, battery[1], label='baterie (V)')
     # plt.plot(t, mt.sum_ar(me), label='Energie (J)')
     #plt.plot(t, mech_pred, label='61*t-92')
