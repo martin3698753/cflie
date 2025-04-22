@@ -16,7 +16,7 @@ cutoff = 50
 sec_norm = 410
 p_size=3
 #PATH = 'pics/figs/'
-PATH = '/home/martin/bak/bak(11)/figs/'
+PATH = '/home/martin/bak/bak(14)/figs/'
 
 def norm_motor(signal):
     return signal
@@ -55,7 +55,7 @@ def h_seq_norm(num):
     fig = plt.figure(figsize=(8, 6))
     plt.plot(t, me, label=r"$m(t)$")
     plt.xlabel(r'$t(s)$', fontsize=12)
-    plt.ylabel(r"$\text{Signál PWM } m [ \% ]$", fontsize=14)
+    plt.ylabel(r"$\text{Průměrný signál PWM }[ \% ]$", fontsize=14)
     plt.legend(fontsize=16)
     plt.tight_layout()
     plt.grid(True)
@@ -70,8 +70,8 @@ def f_seq_norm(num):
 
     fig = plt.figure(figsize=(8, 6))
     plt.plot(t, tleft, label=r"$\tau(t)$")
-    plt.xlabel(r'$t(s)$', fontsize=12)
-    plt.ylabel(r"$\text{Normalizovaný zbývající čas do vybití } \tau \ [s]$", fontsize=15)
+    plt.xlabel(r'$t[s]$', fontsize=14)
+    plt.ylabel(r"$\text{Normalizovaný zbývající čas do vybití } \tau \ [\%]$", fontsize=15)
     plt.legend(fontsize=16)
     plt.tight_layout()
     plt.grid(True)
@@ -88,7 +88,7 @@ def f_seq(num):
 
     fig = plt.figure(figsize=(8, 6))
     plt.plot(t, tleft, label=r"$\tau(t)$")
-    plt.xlabel(r'$t(s)$', fontsize=12)
+    plt.xlabel(r'$t[s]$', fontsize=14)
     plt.ylabel(r"$\text{Zbývající čas do vybití } \tau \ [s]$", fontsize=15)
     plt.legend(fontsize=16)
     plt.tight_layout()
@@ -103,7 +103,7 @@ def g_seq(num):
 
     fig = plt.figure(figsize=(8, 6))
     plt.plot(t, signal, label=r'$u(t)$', color='tab:blue')
-    plt.xlabel(r'$t(s)$', fontsize=12)
+    plt.xlabel(r'$t[s]$', fontsize=14)
     plt.ylabel(r'$\text{Napětí baterie } u \ [V]$', fontsize=14)
     plt.legend(fontsize=16)
     plt.tight_layout()
@@ -122,7 +122,7 @@ def g_seq_norm(num):
 
     fig = plt.figure(figsize=(8, 6))
     plt.plot(t, signal, label=r'$u(t)$', color='tab:blue')
-    plt.xlabel(r'$t(s)$', fontsize=12)
+    plt.xlabel(r'$t[s]$', fontsize=14)
     plt.ylabel(r'$\text{Normalizované napětí baterie } u \ [ \% ]$', fontsize=14)
     plt.legend(fontsize=16)
     plt.tight_layout()
@@ -144,12 +144,12 @@ def relu():
     plt.ylabel('f(x)', fontsize=14)
 
     plt.grid(True, linestyle='--', alpha=0.5)
-    plt.legend(fontsize=12)
+    plt.legend(fontsize=20)
 
     plt.savefig(PATH+"relu.pdf")
     print("saved relu function")
     #plt.show()
-    plt.close
+    plt.close()
 
 def sigmoid():
     x = np.linspace(-5, 5, 1000)
@@ -162,7 +162,7 @@ def sigmoid():
     plt.ylabel('f(x)', fontsize=14)
 
     plt.grid(True, linestyle='--', alpha=0.5)
-    plt.legend(fontsize=12)
+    plt.legend(fontsize=16)
 
     plt.savefig(PATH+"sigmoid.pdf")
     print("saved sigmoid function")
@@ -180,7 +180,7 @@ def tanh():
     plt.ylabel('f(x)', fontsize=14)
 
     plt.grid(True, linestyle='--', alpha=0.5)
-    plt.legend(fontsize=12)
+    plt.legend(fontsize=20)
 
     plt.savefig(PATH+"tanh.pdf")
     print("saved function tanh")
@@ -458,7 +458,7 @@ def motor_graph(num):
     plt.plot(t, motor[2], label=r"Motor $m_2$")
     plt.plot(t, motor[3], label=r"Motor $m_3$")
     plt.plot(t, motor[4], label=r"Motor $m_4$")
-    plt.xlabel(r'$\text{Čas } t(s)$', fontsize=12)
+    plt.xlabel(r'$\text{Čas } t[s]$', fontsize=14)
     plt.ylabel(r'Signály PWM z motorů [%]', fontsize=12)
     plt.legend(fontsize=12, loc='lower right')
     plt.grid(True)
@@ -470,7 +470,7 @@ def motor_graph(num):
 
     fig = plt.figure(figsize=(8, 4))
     plt.plot(t, power, label=r"$m (t)$")
-    plt.xlabel(r'$\text{Čas } t(s)$', fontsize=12)
+    plt.xlabel(r'$\text{Čas } t[s]$', fontsize=14)
     plt.ylabel('Průměr signálu PWM motorů [%]', fontsize=12)
     plt.legend(fontsize=12, loc='upper right')
     plt.grid(True)
@@ -521,16 +521,16 @@ def gen(num):
     fig, (ax1, ax2) = plt.subplots(nrows=2, ncols=1, figsize=(8, 6))
 
     ax1.plot(t, me, label=r'$m(t)$')
-    ax1.set_xlabel(r'$\text{čas } t(s)$', fontsize=12)
+    ax1.set_xlabel(r'$\text{Čas } t[s]$', fontsize=14)
     ax1.set_ylabel(r'$\text{Aritmetický průměr motorů } [\%]$', fontsize=13)
-    ax1.legend(loc='upper right', fontsize=12)
+    ax1.legend(loc='upper right', fontsize=14)
     ax1.grid(True)
 
     # Plot the second dataset
     ax2.plot(battery[0], battery[1], label=r'$u(t)$')
-    ax2.set_xlabel(r'$\text{čas } t(s)$', fontsize=12)
+    ax2.set_xlabel(r'$\text{Čas } t[s]$', fontsize=14)
     ax2.set_ylabel(r'$\text{Napětí baterie } u \ [V]$', fontsize=14)
-    ax2.legend(loc='upper right', fontsize=12)
+    ax2.legend(loc='upper right', fontsize=14)
     ax2.grid(True)
 
     cas = t[-1]
